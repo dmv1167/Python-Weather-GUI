@@ -1,11 +1,12 @@
 """
 Author: Dominic Vinciulla
 open_weather.py uses openweathermap.org api to display real-time weather information
-from the Rochester area to a 480 by 320 screen
+from a given area to a 480 by 320 screen
 """
 
-import time, urllib.request, PySimpleGUI as gui
-from json import loads
+import time
+import PySimpleGUI as gui
+from WeatherData import WeatherDataObj
 from datetime import datetime, timedelta
 from dotenv import dotenv_values
 
@@ -13,24 +14,7 @@ from dotenv import dotenv_values
 values = dotenv_values(".env")
 
 DAYCOUNT = 7
-# FORECAST = f'https://api.openweathermap.org/data/3.0/forecast/daily?q={values["CITY"]}&cnt={DAYCOUNT}&APPID={values["API_KEY"]}'
-CURRENT = f'https://api.openweathermap.org/data/3.0/onecall?lat={values["LAT"]}&lon={values["LON"]}&APPID={values["API_KEY"]}'
-
-def getPage(url: str):
-    """
-    Parses api call into json dictionaries
-    :param url: url to be accessed
-    :return: resulting dictionary from json parsing
-    """
-    try:
-        weatherPage = urllib.request.urlopen(url)
-    except Exception as e:
-        with open('log.txt', 'a+') as file:
-            now = datetime.now().strftime('[%m/%d/%Y %I:%M %p]')
-            file.write(f'\n{now}\n{str(e)}\n')
-        return None
-    else:
-        return loads(weatherPage.read())
+weatherObj = WeatherDataObj(values)
 
 def suffix(myDate: int) -> str:
     """
@@ -45,22 +29,22 @@ def suffix(myDate: int) -> str:
     else:
         return str(myDate) + date_suffix[0]
 
-def callApi() -> tuple:
-    """
-    Gathers info from api and returns tuple of json info,
-    including the wind speed suffix for simplicity
-    :return: Tuple of data from api
-    """
-    # check if metric option is selected
-    # change units if necessary
-    if window['-UNITS-'].get():
-        unit = '&units=metric'
-        speed = ' kmh'
-    else:
-        unit = '&units=imperial'
-        speed = ' mph'
-
-    return getPage(CURRENT + unit), speed
+# def callApi() -> tuple:
+#     """
+#     Gathers info from api and returns tuple of json info,
+#     including the wind speed suffix for simplicity
+#     :return: Tuple of data from api
+#     """
+#     # check if metric option is selected
+#     # change units if necessary
+#     if window['-UNITS-'].get():
+#         unit = '&units=metric'
+#         speed = ' kmh'
+#     else:
+#         unit = '&units=imperial'
+#         speed = ' mph'
+#
+#     return getPage(CURRENT + unit), speed
 
 def layoutGenerator() -> list:
     """
@@ -97,7 +81,7 @@ def layoutGenerator() -> list:
                 [gui.Text('Date', font='Courier 10', pad=0, key='-DATE-'), gui.Checkbox('C' + u'\xb0', pad=((130,0),0), key='-UNITS-')]
             ]
 
-def updateWindow(apiInfo: tuple, lastValues: dict) -> None:
+def updateWindow(lastValues: dict) -> None:
     """
     Calls api function and updates all screen values
     :param apiInfo: A tuple consisting of the two datasets and the wind speed unit
@@ -111,10 +95,10 @@ def updateWindow(apiInfo: tuple, lastValues: dict) -> None:
     dates = [select.strftime('%A, %m/%d') for select in days]
 
     # store results from apiInfo tuple into their own variables
-    weatherJson, speed = apiInfo
-
-    currentInfo = weatherJson['current']
-    futureInfo = weatherJson['daily']
+    # weatherJson, speed = apiInfo
+    #
+    # currentInfo = weatherJson['current']
+    # futureInfo = weatherJson['daily']
 
     #retain prior selection or reset if it is a new day
     if lastValues['-SELECTOR-'] in dates:
@@ -124,38 +108,37 @@ def updateWindow(apiInfo: tuple, lastValues: dict) -> None:
 
 
     # organize necessary info into dict
-    if index != 0 and futureInfo:
+    if index != 0:
         window['-SELECTOR-'].update(values=dates, set_to_index=index)
+        forecast = weatherObj.forecast(index)
         info = {
-            '-TEMP-': str(int(futureInfo[index]['temp']['day'])) + u'\xb0',
-            '-FEELS-': 'Feels like: ' + str(int(futureInfo[index]['feels_like']['day'])) + u'\xb0',
-            '-HUM-': str(futureInfo[index]['humidity']) + '%',
-            '-WIND-': str(int(futureInfo[index]['speed'])) + speed,
-            '-IMAGE-': urllib.request.urlretrieve(
-                r'https://openweathermap.org/img/wn/' + futureInfo[index]['weather']['icon'] + '.png')[0],
+            '-TEMP-': str(int(forecast.temp())) + u'\xb0',
+            '-FEELS-': 'Feels like: ' + str(int(forecast.feelsLike())) + u'\xb0',
+            '-HUM-': str(forecast.humidity()) + '%',
+            '-WIND-': str(int(forecast.windSpeed())) + forecast.getUnit(),
+            '-IMAGE-': gui.net_download_file_binary(forecast.icon()),
             '-DATE-': now.strftime('%A, %B') + ' ' + suffix(now.day) + '  |  ' + now.strftime('%I:%M %p'),
             '-DESC-': ' '.join([word[0].upper() + word[1:] for word in
-                                (futureInfo[index]['weather']['description']).split(' ')]).strip()
+                                (forecast.description()).split(' ')]).strip()
         }
     else:
         info = {
-            '-TEMP-': str(int(currentInfo['temp'])) + u'\xb0',
-            '-FEELS-': 'Feels like: ' + str(int(currentInfo['feels_like'])) + u'\xb0',
-            '-HUM-': str(int(currentInfo['humidity'])) + '%',
-            '-WIND-': str(int(currentInfo['wind_speed'])) + speed,
-            '-IMAGE-': urllib.request.urlretrieve(
-                r'https://openweathermap.org/payload/api/media/file/' + currentInfo['weather']['icon'] + '@2x.png')[0],
-            '-DESC-': ' '.join([word[0].upper() + word[1:] for word in (currentInfo['weather']['description']).split(' ')]).strip()
+            '-TEMP-': str(int(weatherObj.currentTemp())) + u'\xb0',
+            '-FEELS-': 'Feels like: ' + str(int(weatherObj.feelsLike())) + u'\xb0',
+            '-HUM-': str(int(weatherObj.humidity())) + '%',
+            '-WIND-': str(int(weatherObj.windSpeed())) + weatherObj.getUnit(),
+            '-IMAGE-': weatherObj.icon(),
+            '-DESC-': ' '.join([word[0].upper() + word[1:] for word in weatherObj.description().split(' ')]).strip()
         }
     info.update({
         '-DATE-':now.strftime('%A, %B') + ' ' + suffix(now.day) + '  |  ' + now.strftime('%I:%M %p')
     })
-    if weatherJson:
-        info.update({
-            '-CITY-':weatherJson['city']['name'],
-            '-HIGH-':str(int(weatherJson['list'][index]['temp']['max'])) + u'\xb0',
-            '-LOW-':str(int(weatherJson['list'][index]['temp']['min'])) + u'\xb0',
-        })
+    # if weatherJson:
+    #     info.update({
+    #         '-CITY-':weatherJson['city']['name'],
+    #         '-HIGH-':str(int(weatherJson['list'][index]['temp']['max'])) + u'\xb0',
+    #         '-LOW-':str(int(weatherJson['list'][index]['temp']['min'])) + u'\xb0',
+    #     })
 
     # iterate dict and update each value
     # change temp value colors to reflect temperature
@@ -189,6 +172,7 @@ gui.theme('DarkBlue3')
 window = gui.Window('Weather', layoutGenerator(), no_titlebar=True, location=(0, 0), size=(480, 320), keep_on_top=True, finalize=True)
 
 start = time.time()
+first = True
 day = True
 # persistent window loop
 while True:
@@ -197,14 +181,14 @@ while True:
     if event == gui.WIN_CLOSED:
         break
     # on click of update button or every 90 seconds, update
-    if (time.time() - start) >= 180:
+    if (time.time() - start) >= 180 or first:
+        first = False
         start = time.time()
         time.sleep(0.01)
-        data = callApi()
         # if not (data[0] and data[1]):
         #     continue
-        sunset = data[1]['current']['sunset']
-        sunrise = data[1]['current']['sunrise']
+        sunset = weatherObj.sunset()
+        sunrise = weatherObj.sunrise()
         if sunset > time.time() >= sunrise and not day:
             day = True
             window.close()
@@ -218,7 +202,7 @@ while True:
             window = gui.Window('Weather', layoutGenerator(), no_titlebar=True, location=(0, 0), size=(480, 320),
                                 keep_on_top=True, finalize=True)
 
-        updateWindow(data, values)
+        updateWindow(values)
 
 # close window on exit of loop
 window.close()
