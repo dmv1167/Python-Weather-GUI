@@ -13,8 +13,8 @@ from dotenv import dotenv_values
 values = dotenv_values(".env")
 
 DAYCOUNT = 7
-FORECAST = f'https://api.openweathermap.org/data/2.5/forecast/daily?q={values["CITY"]}&cnt={DAYCOUNT}&APPID={values["API_KEY"]}'
-CURRENT = f'https://api.openweathermap.org/data/2.5/weather?q={values["CITY"]}&APPID={values["API_KEY"]}'
+# FORECAST = f'https://api.openweathermap.org/data/3.0/forecast/daily?q={values["CITY"]}&cnt={DAYCOUNT}&APPID={values["API_KEY"]}'
+CURRENT = f'https://api.openweathermap.org/data/3.0/onecall?lat={values["LAT"]}&lon={values["LON"]}&APPID={values["API_KEY"]}'
 
 def getPage(url: str):
     """
@@ -28,7 +28,7 @@ def getPage(url: str):
         with open('log.txt', 'a+') as file:
             now = datetime.now().strftime('[%m/%d/%Y %I:%M %p]')
             file.write(f'\n{now}\n{str(e)}\n')
-        return
+        return None
     else:
         return loads(weatherPage.read())
 
@@ -60,7 +60,7 @@ def callApi() -> tuple:
         unit = '&units=imperial'
         speed = ' mph'
 
-    return getPage(FORECAST + unit), getPage(CURRENT + unit), speed
+    return getPage(CURRENT + unit), speed
 
 def layoutGenerator() -> list:
     """
@@ -111,7 +111,10 @@ def updateWindow(apiInfo: tuple, lastValues: dict) -> None:
     dates = [select.strftime('%A, %m/%d') for select in days]
 
     # store results from apiInfo tuple into their own variables
-    weatherJson, currentJson, speed = apiInfo
+    weatherJson, speed = apiInfo
+
+    currentInfo = weatherJson['current']
+    futureInfo = weatherJson['daily']
 
     #retain prior selection or reset if it is a new day
     if lastValues['-SELECTOR-'] in dates:
@@ -121,28 +124,28 @@ def updateWindow(apiInfo: tuple, lastValues: dict) -> None:
 
 
     # organize necessary info into dict
-    if index != 0 and weatherJson:
+    if index != 0 and futureInfo:
         window['-SELECTOR-'].update(values=dates, set_to_index=index)
         info = {
-            '-TEMP-': str(int(weatherJson['list'][index]['temp']['day'])) + u'\xb0',
-            '-FEELS-': 'Feels like: ' + str(int(weatherJson['list'][index]['feels_like']['day'])) + u'\xb0',
-            '-HUM-': str(weatherJson['list'][index]['humidity']) + '%',
-            '-WIND-': str(int(weatherJson['list'][index]['speed'])) + speed,
+            '-TEMP-': str(int(futureInfo[index]['temp']['day'])) + u'\xb0',
+            '-FEELS-': 'Feels like: ' + str(int(futureInfo[index]['feels_like']['day'])) + u'\xb0',
+            '-HUM-': str(futureInfo[index]['humidity']) + '%',
+            '-WIND-': str(int(futureInfo[index]['speed'])) + speed,
             '-IMAGE-': urllib.request.urlretrieve(
-                r'https://openweathermap.org/img/wn/' + weatherJson['list'][index]['weather'][0]['icon'] + '.png')[0],
+                r'https://openweathermap.org/img/wn/' + futureInfo[index]['weather']['icon'] + '.png')[0],
             '-DATE-': now.strftime('%A, %B') + ' ' + suffix(now.day) + '  |  ' + now.strftime('%I:%M %p'),
             '-DESC-': ' '.join([word[0].upper() + word[1:] for word in
-                                (weatherJson['list'][index]['weather'][0]['description']).split(' ')]).strip()
+                                (futureInfo[index]['weather']['description']).split(' ')]).strip()
         }
     else:
         info = {
-            '-TEMP-': str(int(currentJson['main']['temp'])) + u'\xb0',
-            '-FEELS-': 'Feels like: ' + str(int(currentJson['main']['feels_like'])) + u'\xb0',
-            '-HUM-': str(int(currentJson['main']['humidity'])) + '%',
-            '-WIND-': str(int(currentJson['wind']['speed'])) + speed,
+            '-TEMP-': str(int(currentInfo['temp'])) + u'\xb0',
+            '-FEELS-': 'Feels like: ' + str(int(currentInfo['feels_like'])) + u'\xb0',
+            '-HUM-': str(int(currentInfo['humidity'])) + '%',
+            '-WIND-': str(int(currentInfo['wind_speed'])) + speed,
             '-IMAGE-': urllib.request.urlretrieve(
-                r'https://openweathermap.org/img/wn/' + currentJson['weather'][0]['icon'] + '.png')[0],
-            '-DESC-': ' '.join([word[0].upper() + word[1:] for word in (currentJson['weather'][0]['description']).split(' ')]).strip()
+                r'https://openweathermap.org/payload/api/media/file/' + currentInfo['weather']['icon'] + '@2x.png')[0],
+            '-DESC-': ' '.join([word[0].upper() + word[1:] for word in (currentInfo['weather']['description']).split(' ')]).strip()
         }
     info.update({
         '-DATE-':now.strftime('%A, %B') + ' ' + suffix(now.day) + '  |  ' + now.strftime('%I:%M %p')
@@ -193,16 +196,15 @@ while True:
     # exit loop on window close
     if event == gui.WIN_CLOSED:
         break
-    # on click of update button or every 5 seconds, update
-    if (time.time() - start) >= 4:
+    # on click of update button or every 90 seconds, update
+    if (time.time() - start) >= 180:
         start = time.time()
         time.sleep(0.01)
         data = callApi()
         # if not (data[0] and data[1]):
         #     continue
-        time_info = data[1]['sys']
-        sunset = time_info['sunset']
-        sunrise = time_info['sunrise']
+        sunset = data[1]['current']['sunset']
+        sunrise = data[1]['current']['sunrise']
         if sunset > time.time() >= sunrise and not day:
             day = True
             window.close()
