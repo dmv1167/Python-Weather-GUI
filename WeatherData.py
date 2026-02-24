@@ -45,15 +45,17 @@ class ForecastData:
         return self.unit
 
 class WeatherDataObj:
-    def __init__(self, headers: dict):
+    def __init__(self, headers: dict, city: str, state: str):
         self.headers = headers
         self.headers["UNITS"] = "imperial"
         self.url = ""
         self.buildUrl()
         self.latest = getPage(self.url)
         self.speedUnit = 'mph'
-        self.city = ""
-        self.state = ""
+        self.city = city
+        self.state = state
+        if not city or not state:
+            self.generateCity()
 
     def buildUrl(self):
         self.url = f'https://api.openweathermap.org/data/3.0/onecall?'
@@ -75,6 +77,12 @@ class WeatherDataObj:
 
     def currentTemp(self) -> float:
         return self.latest['current']['temp']
+
+    def highTemp(self) -> float:
+        return self.latest['daily'][0]['temp']['max']
+
+    def lowTemp(self) -> float:
+        return self.latest['daily'][0]['temp']['min']
 
     def feelsLike(self) -> float:
         return self.latest['current']['feels_like']
@@ -101,7 +109,7 @@ class WeatherDataObj:
         return ForecastData(self.latest['daily'][index], self.speedUnit)
 
     def generateCity(self):
-        page = getPage(f'http://api.openweathermap.org/geo/1.0/reverse?lat={self.headers["LAT"]}&lon={self.headers["LON"]}&limit=1&appid={self.headers["APPID"]}')
+        page = getPage(f'http://api.openweathermap.org/geo/1.0/reverse?lat={self.headers["LAT"]}&lon={self.headers["LON"]}&limit=3&appid={self.headers["APPID"]}')
         self.city = page[0]["name"]
         self.state = page[0]["state"]
 

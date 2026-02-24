@@ -14,7 +14,15 @@ from WeatherData import WeatherDataObj
 
 values = dotenv_values(".env")
 DAYCOUNT = 7
-weatherObj = WeatherDataObj(values)
+city = ''
+state = ''
+if 'CITY' in values:
+    city = values.pop('CITY')
+
+if 'STATE' in values:
+    state = values.pop('STATE')
+
+weatherObj = WeatherDataObj(values, city, state)
 
 def suffix(myDate: int) -> str:
     """Returns day of month with correct suffix"""
@@ -26,7 +34,7 @@ def suffix(myDate: int) -> str:
 class WeatherApp:
     def __init__(self, root):
         self.root = root
-        self.root.geometry("480x320")
+        self.root.geometry("1024x600")
         self.root.overrideredirect(True)
         self.root.configure(bg="#1c2b4a")
         self.widgets = {}
@@ -147,7 +155,10 @@ class WeatherApp:
         desc = forecast.description()
         icon_bytes = forecast.icon()
 
+        self.widgets["-CITY-"].config(text=f'{weatherObj.getCity()}')
         self.widgets["-TEMP-"].config(text=f"{temp}°")
+        self.widgets["-HIGH-"].config(text=f"{int(weatherObj.highTemp())}")
+        self.widgets["-LOW-"].config(text=f"{int(weatherObj.lowTemp())}")
         self.widgets["-FEELS-"].config(text=f"Feels like: {feels}°")
         self.widgets["-WIND-"].config(text=f"{wind} mph")
         self.widgets["-HUM-"].config(text=f"{hum}%")
