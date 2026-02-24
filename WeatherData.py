@@ -54,7 +54,6 @@ class WeatherDataObj:
         self.speedUnit = 'mph'
         self.city = ""
         self.state = ""
-        print(self.latest)
 
     def buildUrl(self):
         self.url = f'https://api.openweathermap.org/data/3.0/onecall?'

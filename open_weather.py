@@ -5,7 +5,7 @@ from a given area to a 480 by 320 screen
 """
 
 import time
-import PySimpleGUI as gui
+from PySimpleGUI import PySimpleGUI as sg
 from WeatherData import WeatherDataObj
 from datetime import datetime, timedelta
 from dotenv import dotenv_values
@@ -53,32 +53,32 @@ def layoutGenerator() -> list:
     :return: PySimpleGui layout, a list
     """
     return [
-            [gui.Column([
-                        [gui.Column([
-                                    [gui.Text('City', key='-CITY-', font='Courier 30 bold', pad=((5,0),0)),
-                                     gui.Image(key='-IMAGE-', pad=((10,10),0)),
-                                     gui.Combo([datetime.now().strftime('%A, %m/%d')], default_value=datetime.now().strftime('%A, %m/%d'), size=(16,1), auto_size_text=True, pad=0, readonly=True, key='-SELECTOR-')],
-                                    [gui.Text('Desc', font='Courier 10', key='-DESC-')]],
+            [sg.Column([
+                        [sg.Column([
+                                    [sg.Text('City', key='-CITY-', font='Courier 30 bold', pad=((5, 0), 0)),
+                                     sg.Image(key='-IMAGE-', pad=((10, 10), 0)),
+                                     sg.Combo([datetime.now().strftime('%A, %m/%d')], default_value=datetime.now().strftime('%A, %m/%d'), size=(16, 1), auto_size_text=True, pad=0, readonly=True, key='-SELECTOR-')],
+                                    [sg.Text('Desc', font='Courier 10', key='-DESC-')]],
                                     expand_x=True, pad=0)],
-                        [gui.Column([
-                                    [gui.Text('00', key='-TEMP-', font='Courier 55 bold', pad=((10,10),0))],
-                                    [gui.Text('Feels Like: ', font='Courier 10', key='-FEELS-')]],
+                        [sg.Column([
+                                    [sg.Text('00', key='-TEMP-', font='Courier 55 bold', pad=((10, 10), 0))],
+                                    [sg.Text('Feels Like: ', font='Courier 10', key='-FEELS-')]],
                                     element_justification='center'),
-                        gui.Column([
-                                    [gui.Text('00', font='Courier 20 bold', pad=((0,0),(0,30)), key='-HIGH-'), gui.Text('High', font='Courier 10', pad=(0,0))],
-                                    [gui.Text('00', font='Courier 20 bold', pad=((0,0),(30,0)), key='-LOW-'), gui.Text('Low', font='Courier 10', pad=(0,(60,0)))]],
+                        sg.Column([
+                                    [sg.Text('00', font='Courier 20 bold', pad=((0, 0), (0, 30)), key='-HIGH-'), sg.Text('High', font='Courier 10', pad=(0, 0))],
+                                    [sg.Text('00', font='Courier 20 bold', pad=((0, 0), (30, 0)), key='-LOW-'), sg.Text('Low', font='Courier 10', pad=(0, (60, 0)))]],
                                     element_justification='center'),
-                        gui.VerticalSeparator(color='white', pad=((20,20),(0,0))),
-                        gui.Column([
-                                    [gui.Text('Wind', font='Courier 20', pad=((0,0),(0,5)))],
-                                    [gui.Text('00', font='Courier 20 bold', pad=((0,0),(0,30)), key='-WIND-')],
-                                    [gui.Text('Humidity', font='Courier 20', pad=((0,0),(0,5)))],
-                                    [gui.Text('00', font='Courier 20 bold', pad=((0,0),(0,30)), key='-HUM-')]],
+                        sg.VerticalSeparator(color='white', pad=((20, 20), (0, 0))),
+                        sg.Column([
+                                    [sg.Text('Wind', font='Courier 20', pad=((0, 0), (0, 5)))],
+                                    [sg.Text('00', font='Courier 20 bold', pad=((0, 0), (0, 30)), key='-WIND-')],
+                                    [sg.Text('Humidity', font='Courier 20', pad=((0, 0), (0, 5)))],
+                                    [sg.Text('00', font='Courier 20 bold', pad=((0, 0), (0, 30)), key='-HUM-')]],
                                     element_justification='center')]
                         ],
                         expand_x=True, element_justification='center', pad=((0,10),0), expand_y=True)
                     ],
-                [gui.Text('Date', font='Courier 10', pad=0, key='-DATE-'), gui.Checkbox('C' + u'\xb0', pad=((130,0),0), key='-UNITS-')]
+                [sg.Text('Date', font='Courier 10', pad=0, key='-DATE-'), sg.Checkbox('C' + u'\xb0', pad=((130, 0), 0), key='-UNITS-')]
             ]
 
 def updateWindow(lastValues: dict) -> None:
@@ -116,7 +116,7 @@ def updateWindow(lastValues: dict) -> None:
             '-FEELS-': 'Feels like: ' + str(int(forecast.feelsLike())) + u'\xb0',
             '-HUM-': str(forecast.humidity()) + '%',
             '-WIND-': str(int(forecast.windSpeed())) + forecast.getUnit(),
-            '-IMAGE-': gui.net_download_file_binary(forecast.icon()),
+            '-IMAGE-': sg.net_download_file_binary(forecast.icon()),
             '-DATE-': now.strftime('%A, %B') + ' ' + suffix(now.day) + '  |  ' + now.strftime('%I:%M %p'),
             '-DESC-': ' '.join([word[0].upper() + word[1:] for word in
                                 (forecast.description()).split(' ')]).strip()
@@ -168,8 +168,8 @@ def updateWindow(lastValues: dict) -> None:
 
 
 # initialize window
-gui.theme('DarkBlue3')
-window = gui.Window('Weather', layoutGenerator(), no_titlebar=True, location=(0, 0), size=(480, 320), keep_on_top=True, finalize=True)
+sg.theme('DarkBlue3')
+window = sg.Window('Weather', layoutGenerator(), no_titlebar=True, location=(0, 0), size=(480, 320), keep_on_top=True, finalize=True)
 
 start = time.time()
 first = True
@@ -178,7 +178,7 @@ day = True
 while True:
     event, values = window.read(timeout=5000)
     # exit loop on window close
-    if event == gui.WIN_CLOSED:
+    if event == sg.WIN_CLOSED:
         break
     # on click of update button or every 90 seconds, update
     if (time.time() - start) >= 180 or first:
@@ -192,15 +192,15 @@ while True:
         if sunset > time.time() >= sunrise and not day:
             day = True
             window.close()
-            gui.theme('DarkBlue3')
-            window = gui.Window('Weather', layoutGenerator(), no_titlebar=True, location=(0, 0), size=(480, 320),
-                                keep_on_top=True, finalize=True)
+            sg.theme('DarkBlue3')
+            window = sg.Window('Weather', layoutGenerator(), no_titlebar=True, location=(0, 0), size=(480, 320),
+                               keep_on_top=True, finalize=True)
         elif (time.time() < sunrise or time.time() >= sunset) and day:
             day = False
             window.close()
-            gui.theme('DarkBlue14')
-            window = gui.Window('Weather', layoutGenerator(), no_titlebar=True, location=(0, 0), size=(480, 320),
-                                keep_on_top=True, finalize=True)
+            sg.theme('DarkBlue14')
+            window = sg.Window('Weather', layoutGenerator(), no_titlebar=True, location=(0, 0), size=(480, 320),
+                               keep_on_top=True, finalize=True)
 
         updateWindow(values)
 
