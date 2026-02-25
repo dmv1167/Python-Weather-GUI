@@ -178,14 +178,13 @@ class WeatherApp:
         temp = int(currObj.currentTemp())
         desc = ' '.join([word[0].upper() + word[1:] for word in
                                 (currObj.description()).split(' ')]).strip()
-        icon_bytes = currObj.icon()
 
         self.widgets["-CITY-"].config(text=f'{weatherObj.getCity()},{weatherObj.getState()}')
         self.widgets["-TEMP-"].config(text=f"{temp}°")
-        self.widgets["-HIGH-"].config(text=f"{int(currObj.highTemp())}")
-        self.widgets["-LOW-"].config(text=f"{int(currObj.lowTemp())}")
-        self.widgets["-FEELS-"].config(text=f"Feels like: {int(currObj.feelsLike())}°")
-        self.widgets["-WIND-"].config(text=f"{int(currObj.windSpeed())} {currObj.getUnit()}")
+        self.widgets["-HIGH-"].config(text=f"{round(currObj.highTemp())}")
+        self.widgets["-LOW-"].config(text=f"{round(currObj.lowTemp())}")
+        self.widgets["-FEELS-"].config(text=f"Feels like: {round(currObj.feelsLike())}°")
+        self.widgets["-WIND-"].config(text=f"{round(currObj.windSpeed())} {currObj.getUnit()}")
         self.widgets["-HUM-"].config(text=f"{currObj.humidity()}%")
         self.widgets["-DESC-"].config(text=desc)
         self.widgets["-IMAGE-"].config(image=self.generate_image(currObj.icon()))
@@ -232,6 +231,6 @@ class WeatherApp:
             if 'bg' in w.keys() and getattr(w, "static_color", True):
                 self.set_theme(w, bg)
 
-tkRoot = tk.Tk()
+tkRoot = tk.Tk("Weather App")
 app = WeatherApp(tkRoot)
 tkRoot.mainloop()

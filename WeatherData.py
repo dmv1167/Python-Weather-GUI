@@ -1,4 +1,4 @@
-from urllib.request import urlopen, urlretrieve
+from urllib.request import urlopen
 from datetime import datetime
 from json import loads
 
