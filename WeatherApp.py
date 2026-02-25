@@ -4,10 +4,11 @@ Author: Dominic Vinciulla
 """
 
 import tkinter as tk
+import time
+import threading
 from io import BytesIO
 from tkinter import ttk
 from datetime import datetime, timedelta
-import time
 from urllib.request import urlopen
 from PIL import Image, ImageTk
 from dotenv import dotenv_values
@@ -190,7 +191,7 @@ class WeatherApp:
         self.widgets["-WIND-"].config(text=f"{round(currObj.windSpeed())} {currObj.getUnit()}")
         self.widgets["-HUM-"].config(text=f"{currObj.humidity()}%")
         self.widgets["-DESC-"].config(text=desc)
-        self.widgets["-IMAGE-"].config(image=self.generate_image(currObj.icon()))
+        self.load_image_async(currObj.icon())
 
         # Temperature color logic
         temperature = round(temp if not self.units.get() else (temp * 9/5) + 32)
@@ -210,6 +211,39 @@ class WeatherApp:
         elif (current_time < sunrise or current_time >= sunset) and self.day:
             self.day = False
             self.dark_mode()
+
+    def load_image_async(self, url):
+        if self.iconUrl == url:
+            return
+
+        self.iconUrl = url
+
+        thread = threading.Thread(
+            target=self._download_image,
+            args=(url,),
+            daemon=True
+        )
+        thread.start()
+
+    def _download_image(self, url):
+        try:
+            with urlopen(url) as u:
+                data = u.read()
+
+            image = Image.open(BytesIO(data))
+            photo = ImageTk.PhotoImage(image)
+
+            self.root.after(0, self._update_image_label, photo, url)
+
+        except Exception as e:
+            print(f"Image download failed: {e}")
+
+    def _update_image_label(self, photo, url):
+        if url != self.iconUrl:
+            return
+
+        self.icon = photo
+        self.widgets["-IMAGE-"].config(image=self.icon)
 
     def on_unit_changed(self):
         weatherObj.setUnit("metric" if self.units.get() else "imperial")
