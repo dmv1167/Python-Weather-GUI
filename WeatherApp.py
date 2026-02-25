@@ -182,7 +182,6 @@ class WeatherApp:
         elif temperature <= 30: color = "#0013bf"
         self.widgets["-TEMP-"].config(fg=color)
 
-        # TODO: theme switching based on sunrise/sunset
         sunset = weatherObj.sunset()
         sunrise = weatherObj.sunrise()
         if sunset > time.time() >= sunrise and not self.day:
