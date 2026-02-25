@@ -114,6 +114,7 @@ class WeatherApp:
 
         # VERTICAL SEPARATOR
         sep = tk.Frame(mid, bg="white", width=2)
+        sep.static_color = True
         sep.pack(side="left", fill="y", padx=10)
 
         # WIND/HUMIDITY COLUMN
@@ -182,12 +183,14 @@ class WeatherApp:
         self.widgets["-TEMP-"].config(fg=color)
 
         # TODO: theme switching based on sunrise/sunset
-        # if sunset > time.time() >= sunrise and not self.day:
-        #     self.day = True
-        #     self.set_theme("#1c2b4a")
-        # elif (time.time() < sunrise or time.time() >= sunset) and self.day:
-        #     self.day = False
-        #     self.set_theme("#0d1026")
+        sunset = weatherObj.sunset()
+        sunrise = weatherObj.sunrise()
+        if sunset > time.time() >= sunrise and not self.day:
+            self.day = True
+            self.set_theme(self.root, "#1c2b4a")
+        elif (time.time() < sunrise or time.time() >= sunset) and self.day:
+            self.day = False
+            self.set_theme(self.root, "#0d1026")
 
     def on_day_selected(self, event=None):
         self.update_window(force=True)
@@ -204,13 +207,11 @@ class WeatherApp:
         self.update_window()
         self.root.after(120000, self.schedule_update)
 
-    def set_theme(self, bg):
-        self.root.configure(bg=bg)
-        for w in self.widgets.values():
-            try:
-                w.config(bg=bg)
-            except:
-                pass
+    def set_theme(self, component, bg):
+        component.configure(bg=bg)
+        for w in component.winfo_children():
+            if 'bg' in w.keys() and getattr(w, "static_color", False):
+                self.set_theme(w, bg)
 
 tkRoot = tk.Tk()
 app = WeatherApp(tkRoot)
