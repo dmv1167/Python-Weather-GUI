@@ -1,6 +1,6 @@
 """
 Author: Dominic Vinciulla
-Tkinter port of open_weather.py
+1026x800 weather information application built on tkinter
 """
 
 import tkinter as tk
@@ -15,6 +15,8 @@ from WeatherData import WeatherDataObj
 
 values = dotenv_values(".env")
 DAYCOUNT = 7
+DAYBG = '#737dc7'
+NIGHTBG = '#0d1026'
 city = ''
 state = ''
 if 'CITY' in values:
@@ -25,37 +27,48 @@ if 'STATE' in values:
 
 weatherObj = WeatherDataObj(values, city, state)
 
-def suffix(myDate: int) -> str:
-    """Returns day of month with correct suffix"""
-    date_suffix = ['th', 'st', 'nd', 'rd']
-    if myDate % 10 in [1,2,3] and myDate not in [11,12,13]:
-        return str(myDate) + date_suffix[myDate % 10]
-    return str(myDate) + date_suffix[0]
+def suffix(day: int) -> str:
+    """
+    Returns correct suffix given day of the month
+    :param day: day of the month
+    :return: suffix in ['th', 'st', 'nd', 'rd']
+    """
+    if 11 <= day % 100 <= 13:
+        return f"{day}th"
+    return f"{day}{['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th'][day % 10]}"
 
 def ms_until_next_minute():
+    """
+    Calculates how many milliseconds there are until the next minute starts,
+    allowing for accurate time updates
+    :return: ms until next minute
+    """
     now = datetime.now()
     next_minute = (now.replace(second=0, microsecond=0) + timedelta(minutes=1))
     delta = next_minute - now
     return int(delta.total_seconds() * 1000)
 
 class WeatherApp:
+    """
+    Represents the main tkinter application responsible for displaying info
+    """
     def __init__(self, root):
         self.root = root
         self.root.geometry("1024x600")
         self.root.overrideredirect(True)
-        self.root.configure(bg="#737dc7")
         self.widgets = {}
-        self.last_index = None
         self.day = True
         self.units = tk.BooleanVar()
         self.units.set(False)
         self.iconUrl = ''
         self.icon = self.generate_image(weatherObj.icon())
+        self.date = datetime.today()
 
         self.build_layout()
+        self.light_mode()
 
         # Bind dropdown selection to update immediately
-        self.widgets["-SELECTOR-"].bind("<<ComboboxSelected>>", self.on_day_selected)
+        self.widgets["-SELECTOR-"].bind("<<ComboboxSelected>>", self.update_window)
 
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
@@ -160,24 +173,14 @@ class WeatherApp:
         self.icon = photo
         return photo
 
-    def update_window(self):
-        now = datetime.now()
-        days = [now + timedelta(days=i) for i in range(DAYCOUNT)]
-        dates = [d.strftime('%A, %m/%d') for d in days]
-
+    def update_window(self, event=None):
         # Update dropdown values
-        selector = self.widgets["-SELECTOR-"]
-        selector["values"] = dates
-        index = selector.current() if selector.get() else 0
+        index = self.update_days()
 
-        self.last_index = index
-
-        weatherObj.refresh()
         currObj = weatherObj if index == 0 else weatherObj.forecast(index)
 
         temp = int(currObj.currentTemp())
-        desc = ' '.join([word[0].upper() + word[1:] for word in
-                                (currObj.description()).split(' ')]).strip()
+        desc = currObj.description().title()
 
         self.widgets["-CITY-"].config(text=f'{weatherObj.getCity()},{weatherObj.getState()}')
         self.widgets["-TEMP-"].config(text=f"{temp}°")
@@ -190,7 +193,7 @@ class WeatherApp:
         self.widgets["-IMAGE-"].config(image=self.generate_image(currObj.icon()))
 
         # Temperature color logic
-        temperature = temp if not self.units.get() else (temp * 9/5) + 32
+        temperature = round(temp if not self.units.get() else (temp * 9/5) + 32)
         color = "white"
         if temperature >= 80: color = "red"
         elif temperature >= 70: color = "orange"
@@ -200,18 +203,17 @@ class WeatherApp:
 
         sunset = weatherObj.sunset()
         sunrise = weatherObj.sunrise()
-        if sunset > time.time() >= sunrise and not self.day:
+        current_time = time.time()
+        if sunset > current_time >= sunrise and not self.day:
             self.day = True
-            self.set_theme(self.root, "#737dc7")
-        elif (time.time() < sunrise or time.time() >= sunset) and self.day:
+            self.light_mode()
+        elif (current_time < sunrise or current_time >= sunset) and self.day:
             self.day = False
-            self.set_theme(self.root, "#0d1026")
-
-    def on_day_selected(self, event=None):
-        self.update_window()
+            self.dark_mode()
 
     def on_unit_changed(self):
         weatherObj.setUnit("metric" if self.units.get() else "imperial")
+        weatherObj.refresh()
         self.update_window()
 
     def update_time(self):
@@ -221,15 +223,38 @@ class WeatherApp:
         )
         self.root.after(ms_until_next_minute(), self.update_time)
 
+    def update_days(self):
+        selector = self.widgets["-SELECTOR-"]
+        if self.date != datetime.today():
+            now = datetime.now()
+            days = [now + timedelta(days=i) for i in range(DAYCOUNT)]
+            dates = [d.strftime('%A, %m/%d') for d in days]
+            selector["values"] = dates
+            self.date = datetime.today()
+
+        index = selector.current() if selector.get() else 0
+        return index
+
     def schedule_update(self):
+        weatherObj.refresh()
         self.update_window()
         self.root.after(120000, self.schedule_update)
 
-    def set_theme(self, component, bg):
-        component.configure(bg=bg)
+    def dark_mode(self):
+        self.set_theme(self.root, NIGHTBG, DAYBG)
+
+    def light_mode(self):
+        self.set_theme(self.root, DAYBG, '#1b4080')
+
+    def set_theme(self, component, bg, fg):
+        if 'bg' in component.keys() and getattr(component, "static_color", True):
+            component.configure(bg=bg)
+
+        if 'fg' in component.keys() and getattr(component, "static_color", True):
+            component.configure(fg=fg)
+
         for w in component.winfo_children():
-            if 'bg' in w.keys() and getattr(w, "static_color", True):
-                self.set_theme(w, bg)
+            self.set_theme(w, bg, fg)
 
 tkRoot = tk.Tk("Weather App")
 app = WeatherApp(tkRoot)
