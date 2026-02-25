@@ -202,7 +202,6 @@ class WeatherApp:
         self.widgets["-DATE-"].config(
             text=f'{now.strftime("%A, %B")} {suffix(now.day)} | {now.strftime("%I:%M %p")}'
         )
-        print(f"Updated at {datetime.now(timezone.utc)}")
         self.root.after(ms_until_next_minute(), self.update_time)
 
     def schedule_update(self):
