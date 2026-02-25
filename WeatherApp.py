@@ -5,7 +5,7 @@ Tkinter port of open_weather.py
 
 import tkinter as tk
 from tkinter import ttk
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import time
 from dotenv import dotenv_values
 from WeatherData import WeatherDataObj
@@ -31,6 +31,12 @@ def suffix(myDate: int) -> str:
         return str(myDate) + date_suffix[myDate % 10]
     return str(myDate) + date_suffix[0]
 
+def ms_until_next_minute():
+    now = datetime.now()
+    next_minute = (now.replace(second=0, microsecond=0) + timedelta(minutes=1))
+    delta = next_minute - now
+    return int(delta.total_seconds() * 1000)
+
 class WeatherApp:
     def __init__(self, root):
         self.root = root
@@ -50,6 +56,7 @@ class WeatherApp:
 
         # Start the periodic 2-minute update loop
         self.schedule_update()
+        self.update_time()
 
     def on_close(self):
         self.root.destroy()
@@ -164,9 +171,6 @@ class WeatherApp:
         self.widgets["-WIND-"].config(text=f"{wind} mph")
         self.widgets["-HUM-"].config(text=f"{hum}%")
         self.widgets["-DESC-"].config(text=desc)
-        self.widgets["-DATE-"].config(
-            text=now.strftime("%A, %B ") + suffix(now.day) + now.strftime(" | %I:%M %p")
-        )
 
         # Temperature color logic
         temperature = temp if not self.units.get() else (temp * 9/5) + 32
@@ -188,9 +192,17 @@ class WeatherApp:
     def on_day_selected(self, event=None):
         self.update_window(force=True)
 
+    def update_time(self):
+        now = datetime.now()
+        self.widgets["-DATE-"].config(
+            text=f'{now.strftime("%A, %B")} {suffix(now.day)} | {now.strftime("%I:%M %p")}'
+        )
+        print(f"Updated at {datetime.now(timezone.utc)}")
+        self.root.after(ms_until_next_minute(), self.update_time)
+
     def schedule_update(self):
         self.update_window()
-        self.root.after(120000, self.schedule_update)  # 2 minutes
+        self.root.after(120000, self.schedule_update)
 
     def set_theme(self, bg):
         self.root.configure(bg=bg)
