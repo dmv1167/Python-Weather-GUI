@@ -140,6 +140,9 @@ class WeatherApp:
         self.widgets["-UNITS-"] = tk.Checkbutton(bottom, text="C°", font=("Courier", 20), variable=self.units, bg=bg, fg="white")
         self.widgets["-UNITS-"].pack(side="right", padx=15, pady=5)
 
+        self.widgets["-QUIT-"] = tk.Button(bottom, text="Quit", font=("Courier", 15), bg=bg, fg="white", command=self.on_close)
+        self.widgets["-QUIT-"].pack(side="right")
+
     def update_window(self, force=False):
         now = datetime.now()
         days = [now + timedelta(days=i) for i in range(DAYCOUNT)]
