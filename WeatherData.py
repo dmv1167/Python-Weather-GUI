@@ -63,6 +63,7 @@ class WeatherDataObj:
             self.url += f'&{header.lower()}={self.headers[header]}'
 
     def refresh(self):
+        self.buildUrl()
         self.latest = getPage(self.url)
 
     def setUnit(self, unit: str):

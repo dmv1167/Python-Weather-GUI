@@ -5,7 +5,7 @@ Tkinter port of open_weather.py
 
 import tkinter as tk
 from tkinter import ttk
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 import time
 from dotenv import dotenv_values
 from WeatherData import WeatherDataObj
@@ -42,10 +42,12 @@ class WeatherApp:
         self.root = root
         self.root.geometry("1024x600")
         self.root.overrideredirect(True)
-        self.root.configure(bg="#1c2b4a")
+        self.root.configure(bg="#737dc7")
         self.widgets = {}
         self.last_index = None
         self.day = True
+        self.units = tk.BooleanVar()
+        self.units.set(False)
 
         self.build_layout()
 
@@ -114,7 +116,7 @@ class WeatherApp:
 
         # VERTICAL SEPARATOR
         sep = tk.Frame(mid, bg="white", width=2)
-        sep.static_color = True
+        sep.static_color = False
         sep.pack(side="left", fill="y", padx=10)
 
         # WIND/HUMIDITY COLUMN
@@ -136,8 +138,7 @@ class WeatherApp:
         self.widgets["-DATE-"] = tk.Label(bottom, text="Date", font=("Courier", 25), bg=bg, fg="white")
         self.widgets["-DATE-"].pack(side="left")
 
-        self.units = tk.BooleanVar()
-        self.widgets["-UNITS-"] = tk.Checkbutton(bottom, text="C°", font=("Courier", 20), variable=self.units, bg=bg, fg="white")
+        self.widgets["-UNITS-"] = tk.Checkbutton(bottom, text="C°", font=("Courier", 20), variable=self.units, highlightcolor=bg, selectcolor=bg, bg=bg, fg="white", command=self.on_unit_changed)
         self.widgets["-UNITS-"].pack(side="right", padx=15, pady=5)
 
         self.widgets["-QUIT-"] = tk.Button(bottom, text="Quit", font=("Courier", 15), bg=bg, fg="white", command=self.on_close)
@@ -153,11 +154,9 @@ class WeatherApp:
         selector["values"] = dates
         index = selector.current() if selector.get() else 0
 
-        # Skip if same day and not forced
-        if index == self.last_index and not force:
-            return
         self.last_index = index
 
+        weatherObj.refresh()
         forecast = weatherObj.forecast(index)
         temp = int(forecast.temp())
         feels = int(forecast.feelsLike())
@@ -172,7 +171,7 @@ class WeatherApp:
         self.widgets["-HIGH-"].config(text=f"{int(weatherObj.highTemp())}")
         self.widgets["-LOW-"].config(text=f"{int(weatherObj.lowTemp())}")
         self.widgets["-FEELS-"].config(text=f"Feels like: {feels}°")
-        self.widgets["-WIND-"].config(text=f"{wind} mph")
+        self.widgets["-WIND-"].config(text=f"{wind} {weatherObj.getUnit()}")
         self.widgets["-HUM-"].config(text=f"{hum}%")
         self.widgets["-DESC-"].config(text=desc)
 
@@ -189,12 +188,16 @@ class WeatherApp:
         sunrise = weatherObj.sunrise()
         if sunset > time.time() >= sunrise and not self.day:
             self.day = True
-            self.set_theme(self.root, "#1c2b4a")
+            self.set_theme(self.root, "#737dc7")
         elif (time.time() < sunrise or time.time() >= sunset) and self.day:
             self.day = False
             self.set_theme(self.root, "#0d1026")
 
-    def on_day_selected(self, event=None):
+    def on_day_selected(self):
+        self.update_window(force=True)
+
+    def on_unit_changed(self):
+        weatherObj.setUnit("metric" if self.units.get() else "imperial")
         self.update_window(force=True)
 
     def update_time(self):
@@ -211,7 +214,7 @@ class WeatherApp:
     def set_theme(self, component, bg):
         component.configure(bg=bg)
         for w in component.winfo_children():
-            if 'bg' in w.keys() and getattr(w, "static_color", False):
+            if 'bg' in w.keys() and getattr(w, "static_color", True):
                 self.set_theme(w, bg)
 
 tkRoot = tk.Tk()
