@@ -4,13 +4,14 @@ Tkinter port of open_weather.py
 """
 
 import tkinter as tk
+from io import BytesIO
 from tkinter import ttk
 from datetime import datetime, timedelta
 import time
+from urllib.request import urlopen
+from PIL import Image, ImageTk
 from dotenv import dotenv_values
 from WeatherData import WeatherDataObj
-# from PIL import Image, ImageTk
-# import io
 
 values = dotenv_values(".env")
 DAYCOUNT = 7
@@ -48,6 +49,8 @@ class WeatherApp:
         self.day = True
         self.units = tk.BooleanVar()
         self.units.set(False)
+        self.iconUrl = ''
+        self.icon = self.generate_image(weatherObj.icon())
 
         self.build_layout()
 
@@ -78,7 +81,7 @@ class WeatherApp:
         self.widgets["-CITY-"] = tk.Label(top, text="City", font=("Courier", 30, "bold"), bg=bg, fg="white")
         self.widgets["-CITY-"].pack(side="left", padx=10)
 
-        self.widgets["-IMAGE-"] = tk.Label(top, bg=bg)
+        self.widgets["-IMAGE-"] = tk.Label(top, bg=bg, image=self.icon)
         self.widgets["-IMAGE-"].pack(side="left", padx=10)
 
         self.widgets["-SELECTOR-"] = ttk.Combobox(top, state="readonly")
@@ -144,7 +147,20 @@ class WeatherApp:
         self.widgets["-QUIT-"] = tk.Button(bottom, text="Quit", font=("Courier", 15), bg=bg, fg="white", command=self.on_close)
         self.widgets["-QUIT-"].pack(side="right")
 
-    def update_window(self, force=False):
+    def generate_image(self, url):
+        if self.iconUrl == url:
+            return self.icon
+
+        self.iconUrl = url
+        with urlopen(self.iconUrl) as u:
+            data = u.read()
+
+        image = Image.open(BytesIO(data))
+        photo = ImageTk.PhotoImage(image)
+        self.icon = photo
+        return photo
+
+    def update_window(self):
         now = datetime.now()
         days = [now + timedelta(days=i) for i in range(DAYCOUNT)]
         dates = [d.strftime('%A, %m/%d') for d in days]
@@ -157,23 +173,22 @@ class WeatherApp:
         self.last_index = index
 
         weatherObj.refresh()
-        forecast = weatherObj.forecast(index)
-        temp = int(forecast.temp())
-        feels = int(forecast.feelsLike())
-        hum = forecast.humidity()
-        wind = int(forecast.windSpeed())
+        currObj = weatherObj if index == 0 else weatherObj.forecast(index)
+
+        temp = int(currObj.currentTemp())
         desc = ' '.join([word[0].upper() + word[1:] for word in
-                                (forecast.description()).split(' ')]).strip()
-        icon_bytes = forecast.icon()
+                                (currObj.description()).split(' ')]).strip()
+        icon_bytes = currObj.icon()
 
         self.widgets["-CITY-"].config(text=f'{weatherObj.getCity()},{weatherObj.getState()}')
         self.widgets["-TEMP-"].config(text=f"{temp}°")
-        self.widgets["-HIGH-"].config(text=f"{int(weatherObj.highTemp())}")
-        self.widgets["-LOW-"].config(text=f"{int(weatherObj.lowTemp())}")
-        self.widgets["-FEELS-"].config(text=f"Feels like: {feels}°")
-        self.widgets["-WIND-"].config(text=f"{wind} {weatherObj.getUnit()}")
-        self.widgets["-HUM-"].config(text=f"{hum}%")
+        self.widgets["-HIGH-"].config(text=f"{int(currObj.highTemp())}")
+        self.widgets["-LOW-"].config(text=f"{int(currObj.lowTemp())}")
+        self.widgets["-FEELS-"].config(text=f"Feels like: {int(currObj.feelsLike())}°")
+        self.widgets["-WIND-"].config(text=f"{int(currObj.windSpeed())} {currObj.getUnit()}")
+        self.widgets["-HUM-"].config(text=f"{currObj.humidity()}%")
         self.widgets["-DESC-"].config(text=desc)
+        self.widgets["-IMAGE-"].config(image=self.generate_image(currObj.icon()))
 
         # Temperature color logic
         temperature = temp if not self.units.get() else (temp * 9/5) + 32
@@ -193,12 +208,12 @@ class WeatherApp:
             self.day = False
             self.set_theme(self.root, "#0d1026")
 
-    def on_day_selected(self):
-        self.update_window(force=True)
+    def on_day_selected(self, event=None):
+        self.update_window()
 
     def on_unit_changed(self):
         weatherObj.setUnit("metric" if self.units.get() else "imperial")
-        self.update_window(force=True)
+        self.update_window()
 
     def update_time(self):
         now = datetime.now()

@@ -21,10 +21,16 @@ def getPage(url: str):
 class ForecastData:
     def __init__(self, data, unit):
         self.data = data
-        self.unit = unit
+        self.speedUnit = unit
 
-    def temp(self) -> float:
+    def currentTemp(self) -> float:
         return self.data['temp']['day']
+
+    def highTemp(self) -> float:
+        return self.data['temp']['max']
+
+    def lowTemp(self) -> float:
+        return self.data['temp']['min']
 
     def feelsLike(self) -> float:
         return self.data['feels_like']['day']
@@ -33,16 +39,16 @@ class ForecastData:
         return self.data['humidity']
 
     def windSpeed(self) -> float:
-        return self.data['wind_speed']
+        return self.data['wind_speed'] * (1 if self.speedUnit == 'mph' else 3.6)
 
     def icon(self):
-        return r'https://openweathermap.org/payload/api/media/file/' + self.data['weather'][0]['icon'] + '@2x.png'
+        return f'https://openweathermap.org/payload/api/media/file/{self.data['weather'][0]['icon']}.png'
 
     def description(self) -> str:
         return self.data['weather'][0]['description']
 
     def getUnit(self) -> str:
-        return self.unit
+        return self.speedUnit
 
 class WeatherDataObj:
     def __init__(self, headers: dict, city: str, state: str):
@@ -50,7 +56,7 @@ class WeatherDataObj:
         self.headers["UNITS"] = "imperial"
         self.url = ""
         self.buildUrl()
-        self.latest = getPage(self.url)
+        self.data = getPage(self.url)
         self.speedUnit = 'mph'
         self.city = city
         self.state = state
@@ -64,7 +70,7 @@ class WeatherDataObj:
 
     def refresh(self):
         self.buildUrl()
-        self.latest = getPage(self.url)
+        self.data = getPage(self.url)
 
     def setUnit(self, unit: str):
         self.headers["UNITS"] = unit
@@ -77,37 +83,37 @@ class WeatherDataObj:
         return self.speedUnit
 
     def currentTemp(self) -> float:
-        return self.latest['current']['temp']
+        return self.data['current']['temp']
 
     def highTemp(self) -> float:
-        return self.latest['daily'][0]['temp']['max']
+        return self.data['daily'][0]['temp']['max']
 
     def lowTemp(self) -> float:
-        return self.latest['daily'][0]['temp']['min']
+        return self.data['daily'][0]['temp']['min']
 
     def feelsLike(self) -> float:
-        return self.latest['current']['feels_like']
+        return self.data['current']['feels_like']
 
     def humidity(self) -> int:
-        return self.latest['current']['humidity']
+        return self.data['current']['humidity']
 
     def windSpeed(self) -> float:
-        return self.latest['current']['wind_speed']
+        return self.data['current']['wind_speed'] * (1 if self.speedUnit == 'mph' else 3.6)
 
     def icon(self) -> str:
-        return r'https://openweathermap.org/payload/api/media/file/' + self.latest['current']['weather'][0]['icon'] + '@2x.png'
-
+        return f'https://openweathermap.org/payload/api/media/file/{self.data['current']['weather'][0]['icon']}.png'
+        # return 'https://openweathermap.org/payload/api/media/file/10d%402x.png'
     def description(self) -> str:
-        return self.latest['current']['weather'][0]['description']
+        return self.data['current']['weather'][0]['description']
 
     def sunset(self) -> int:
-        return self.latest['current']['sunset']
+        return self.data['current']['sunset']
 
     def sunrise(self) -> int:
-        return self.latest['current']['sunrise']
+        return self.data['current']['sunrise']
 
     def forecast(self, index: int):
-        return ForecastData(self.latest['daily'][index], self.speedUnit)
+        return ForecastData(self.data['daily'][index], self.speedUnit)
 
     def generateCity(self):
         page = getPage(f'http://api.openweathermap.org/geo/1.0/reverse?lat={self.headers["LAT"]}&lon={self.headers["LON"]}&limit=3&appid={self.headers["APPID"]}')
