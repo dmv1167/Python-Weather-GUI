@@ -41,8 +41,11 @@ class ForecastData:
     def windSpeed(self) -> float:
         return self.data['wind_speed'] * (1 if self.speedUnit == 'mph' else 3.6)
 
+    def iconCode(self) -> str:
+        return self.data['weather'][0]['icon']
+
     def icon(self):
-        return f'https://openweathermap.org/payload/api/media/file/{self.data['weather'][0]['icon']}.png'
+        return f'https://openweathermap.org/payload/api/media/file/{self.iconCode()}.png'
 
     def description(self) -> str:
         return self.data['weather'][0]['description']
@@ -100,9 +103,12 @@ class WeatherDataObj:
     def windSpeed(self) -> float:
         return self.data['current']['wind_speed'] * (1 if self.speedUnit == 'mph' else 3.6)
 
+    def iconCode(self) -> str:
+        return self.data['current']['weather'][0]['icon']
+
     def icon(self) -> str:
-        return f'https://openweathermap.org/payload/api/media/file/{self.data['current']['weather'][0]['icon']}.png'
-        # return 'https://openweathermap.org/payload/api/media/file/10d%402x.png'
+        return f'https://openweathermap.org/payload/api/media/file/{self.iconCode()}.png'
+
     def description(self) -> str:
         return self.data['current']['weather'][0]['description']
 
