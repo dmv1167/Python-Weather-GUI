@@ -67,17 +67,17 @@ class WeatherApp:
         top.pack(fill="x", pady=5)
 
         self.widgets["-CITY-"] = tk.Label(top, text="City", font=("Courier", 30, "bold"), bg=bg, fg="white")
-        self.widgets["-CITY-"].pack(side="left")
+        self.widgets["-CITY-"].pack(side="left", padx=10)
 
         self.widgets["-IMAGE-"] = tk.Label(top, bg=bg)
         self.widgets["-IMAGE-"].pack(side="left", padx=10)
 
         self.widgets["-SELECTOR-"] = ttk.Combobox(top, state="readonly")
-        self.widgets["-SELECTOR-"].pack(side="right", padx=5)
+        self.widgets["-SELECTOR-"].pack(side="right", padx=15)
         self.widgets["-SELECTOR-"]["values"] = [datetime.now().strftime('%A, %m/%d')]
 
-        self.widgets["-DESC-"] = tk.Label(main, text="Desc", font=("Courier", 10), bg=bg, fg="white")
-        self.widgets["-DESC-"].pack()
+        self.widgets["-DESC-"] = tk.Label(top, text="Desc", font=("Courier", 20), bg=bg, fg="white")
+        self.widgets["-DESC-"].pack(side="left")
 
         # Middle row: Temp, High/Low, Wind/Humidity
         mid = tk.Frame(main, bg=bg)
@@ -87,23 +87,23 @@ class WeatherApp:
         temp_col = tk.Frame(mid, bg=bg)
         temp_col.pack(side="left", expand=True)
 
-        self.widgets["-TEMP-"] = tk.Label(temp_col, text="00°", font=("Courier", 55, "bold"), bg=bg, fg="white")
+        self.widgets["-TEMP-"] = tk.Label(temp_col, text="00°", font=("Courier", 155, "bold"), bg=bg, fg="white")
         self.widgets["-TEMP-"].pack()
 
-        self.widgets["-FEELS-"] = tk.Label(temp_col, text="Feels Like:", font=("Courier", 10), bg=bg, fg="white")
+        self.widgets["-FEELS-"] = tk.Label(temp_col, text="Feels Like:", font=("Courier", 30), bg=bg, fg="white")
         self.widgets["-FEELS-"].pack()
 
         # HIGH/LOW COLUMN
         hl_col = tk.Frame(mid, bg=bg)
         hl_col.pack(side="left", expand=True)
 
-        self.widgets["-HIGH-"] = tk.Label(hl_col, text="00", font=("Courier", 20, "bold"), bg=bg, fg="white")
+        self.widgets["-HIGH-"] = tk.Label(hl_col, text="00", font=("Courier", 40, "bold"), bg=bg, fg="white")
         self.widgets["-HIGH-"].pack()
-        tk.Label(hl_col, text="High", font=("Courier", 10), bg=bg, fg="white").pack()
+        tk.Label(hl_col, text="High", font=("Courier", 20), bg=bg, fg="white").pack()
 
-        self.widgets["-LOW-"] = tk.Label(hl_col, text="00", font=("Courier", 20, "bold"), bg=bg, fg="white")
+        self.widgets["-LOW-"] = tk.Label(hl_col, text="00", font=("Courier", 40, "bold"), bg=bg, fg="white")
         self.widgets["-LOW-"].pack()
-        tk.Label(hl_col, text="Low", font=("Courier", 10), bg=bg, fg="white").pack()
+        tk.Label(hl_col, text="Low", font=("Courier", 20), bg=bg, fg="white").pack()
 
         # VERTICAL SEPARATOR
         sep = tk.Frame(mid, bg="white", width=2)
@@ -113,24 +113,24 @@ class WeatherApp:
         wh_col = tk.Frame(mid, bg=bg)
         wh_col.pack(side="left", expand=True)
 
-        tk.Label(wh_col, text="Wind", font=("Courier", 20), bg=bg, fg="white").pack()
-        self.widgets["-WIND-"] = tk.Label(wh_col, text="00", font=("Courier", 20, "bold"), bg=bg, fg="white")
+        tk.Label(wh_col, text="Wind", font=("Courier", 40), bg=bg, fg="white").pack()
+        self.widgets["-WIND-"] = tk.Label(wh_col, text="00", font=("Courier", 40, "bold"), bg=bg, fg="white")
         self.widgets["-WIND-"].pack()
 
-        tk.Label(wh_col, text="Humidity", font=("Courier", 20), bg=bg, fg="white").pack()
-        self.widgets["-HUM-"] = tk.Label(wh_col, text="00", font=("Courier", 20, "bold"), bg=bg, fg="white")
+        tk.Label(wh_col, text="Humidity", font=("Courier", 40), bg=bg, fg="white").pack()
+        self.widgets["-HUM-"] = tk.Label(wh_col, text="00", font=("Courier", 40, "bold"), bg=bg, fg="white")
         self.widgets["-HUM-"].pack()
 
         # Bottom row: Date + Units checkbox
         bottom = tk.Frame(main, bg=bg)
         bottom.pack(fill="x")
 
-        self.widgets["-DATE-"] = tk.Label(bottom, text="Date", font=("Courier", 10), bg=bg, fg="white")
+        self.widgets["-DATE-"] = tk.Label(bottom, text="Date", font=("Courier", 25), bg=bg, fg="white")
         self.widgets["-DATE-"].pack(side="left")
 
         self.units = tk.BooleanVar()
-        self.widgets["-UNITS-"] = tk.Checkbutton(bottom, text="C°", variable=self.units, bg=bg, fg="white")
-        self.widgets["-UNITS-"].pack(side="right")
+        self.widgets["-UNITS-"] = tk.Checkbutton(bottom, text="C°", font=("Courier", 20), variable=self.units, bg=bg, fg="white")
+        self.widgets["-UNITS-"].pack(side="right", padx=15, pady=5)
 
     def update_window(self, force=False):
         now = datetime.now()
@@ -152,10 +152,11 @@ class WeatherApp:
         feels = int(forecast.feelsLike())
         hum = forecast.humidity()
         wind = int(forecast.windSpeed())
-        desc = forecast.description()
+        desc = ' '.join([word[0].upper() + word[1:] for word in
+                                (forecast.description()).split(' ')]).strip()
         icon_bytes = forecast.icon()
 
-        self.widgets["-CITY-"].config(text=f'{weatherObj.getCity()}')
+        self.widgets["-CITY-"].config(text=f'{weatherObj.getCity()},{weatherObj.getState()}')
         self.widgets["-TEMP-"].config(text=f"{temp}°")
         self.widgets["-HIGH-"].config(text=f"{int(weatherObj.highTemp())}")
         self.widgets["-LOW-"].config(text=f"{int(weatherObj.lowTemp())}")
@@ -199,7 +200,6 @@ class WeatherApp:
             except:
                 pass
 
-# ---------------- Run App ----------------
-root = tk.Tk()
-app = WeatherApp(root)
-root.mainloop()
+tkRoot = tk.Tk()
+app = WeatherApp(tkRoot)
+tkRoot.mainloop()
