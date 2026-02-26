@@ -100,6 +100,8 @@ class WeatherApp:
         self.widgets["-SELECTOR-"] = ttk.Combobox(top, state="readonly")
         self.widgets["-SELECTOR-"].pack(side="right", padx=15)
         self.widgets["-SELECTOR-"]["values"] = [datetime.now().strftime('%A, %m/%d')]
+        self.update_days(True)
+        self.widgets["-SELECTOR-"].current(0)
 
         desc_box = tk.Frame(main, bg=bg)
         desc_box.pack(fill='x', )
@@ -181,7 +183,7 @@ class WeatherApp:
 
     def update_window(self, event=None):
         # Update dropdown values
-        index = self.update_days()
+        index = self.update_days(False)
 
         currObj = weatherObj if index == 0 else weatherObj.forecast(index)
 
@@ -262,12 +264,13 @@ class WeatherApp:
         )
         self.root.after(ms_until_next_minute(), self.update_time)
 
-    def update_days(self):
+    def update_days(self, force: bool):
         selector = self.widgets["-SELECTOR-"]
-        if self.date != datetime.today():
+        if force or self.date != datetime.today():
             now = datetime.now()
             days = [now + timedelta(days=i) for i in range(DAYCOUNT)]
             dates = [d.strftime('%A, %m/%d') for d in days]
+            dates[0] = "Today"
             selector["values"] = dates
             self.date = datetime.today()
 
