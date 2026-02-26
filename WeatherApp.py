@@ -290,6 +290,6 @@ class WeatherApp:
         for w in component.winfo_children():
             self.set_theme(w, bg, fg)
 
-tkRoot = tk.Tk("Weather App")
+tkRoot = tk.Tk()
 app = WeatherApp(tkRoot)
 tkRoot.mainloop()
