@@ -20,9 +20,9 @@ DAYBG = '#737dc7'
 NIGHTBG = '#0d1026'
 city = ''
 state = ''
+
 if 'CITY' in values:
     city = values.pop('CITY')
-
 if 'STATE' in values:
     state = values.pop('STATE')
 
@@ -193,15 +193,6 @@ class WeatherApp:
         self.widgets["-DESC-"].config(text=desc)
         self.load_image_async(currObj.icon())
 
-        # Temperature color logic
-        temperature = round(temp if not self.units.get() else (temp * 9/5) + 32)
-        color = "white"
-        if temperature >= 80: color = "red"
-        elif temperature >= 70: color = "orange"
-        elif temperature <= 45: color = "#03b6fc"
-        elif temperature <= 30: color = "#0013bf"
-        self.widgets["-TEMP-"].config(fg=color)
-
         sunset = weatherObj.sunset()
         sunrise = weatherObj.sunrise()
         current_time = time.time()
@@ -211,6 +202,15 @@ class WeatherApp:
         elif (current_time < sunrise or current_time >= sunset) and self.day:
             self.day = False
             self.dark_mode()
+
+        # Temperature color logic
+        temperature = round(temp if not self.units.get() else (temp * 9/5) + 32)
+        color = self.widgets["-HUM-"].cget("fg")
+        if temperature >= 80: color = "red"
+        elif temperature >= 70: color = "orange"
+        elif temperature <= 45: color = "#03b6fc"
+        elif temperature <= 30: color = "#0013bf"
+        self.widgets["-TEMP-"].config(fg=color)
 
     def load_image_async(self, url):
         if self.iconUrl == url:
