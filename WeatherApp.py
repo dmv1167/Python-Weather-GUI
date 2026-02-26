@@ -16,7 +16,8 @@ from WeatherData import WeatherDataObj
 
 values = dotenv_values(".env")
 DAYCOUNT = 7
-DAYBG = '#737dc7'
+DAYBG = '#a2c1fa'
+DAYTEXT = '#0c1d3d'
 NIGHTBG = '#0d1026'
 city = ''
 state = ''
@@ -90,19 +91,23 @@ class WeatherApp:
 
         # Top row: City + Icon + Day selector
         top = tk.Frame(main, bg=bg)
-        top.pack(fill="x", pady=5)
+        top.pack(fill='x')
 
-        self.widgets["-CITY-"] = tk.Label(top, text="City", font=("Courier", 30, "bold"), bg=bg, fg="white")
+        self.widgets["-CITY-"] = tk.Label(top, text="City", font=("Courier", 50, "bold"), bg=bg, fg="white")
         self.widgets["-CITY-"].pack(side="left", padx=10)
 
-        self.widgets["-IMAGE-"] = tk.Label(top, bg=bg, image=self.icon)
-        self.widgets["-IMAGE-"].pack(side="left", padx=10)
 
         self.widgets["-SELECTOR-"] = ttk.Combobox(top, state="readonly")
         self.widgets["-SELECTOR-"].pack(side="right", padx=15)
         self.widgets["-SELECTOR-"]["values"] = [datetime.now().strftime('%A, %m/%d')]
 
-        self.widgets["-DESC-"] = tk.Label(top, text="Desc", font=("Courier", 20), bg=bg, fg="white")
+        desc_box = tk.Frame(main, bg=bg)
+        desc_box.pack(fill='x', )
+
+        self.widgets["-IMAGE-"] = tk.Label(desc_box, bg=bg, image=self.icon)
+        self.widgets["-IMAGE-"].pack(side="left", padx=10)
+
+        self.widgets["-DESC-"] = tk.Label(desc_box, text="Desc", font=("Courier", 20, 'bold'), bg=bg, fg="white")
         self.widgets["-DESC-"].pack(side="left")
 
         # Middle row: Temp, High/Low, Wind/Humidity
@@ -278,7 +283,7 @@ class WeatherApp:
         self.set_theme(self.root, NIGHTBG, DAYBG)
 
     def light_mode(self):
-        self.set_theme(self.root, DAYBG, '#1b4080')
+        self.set_theme(self.root, DAYBG, DAYTEXT)
 
     def set_theme(self, component, bg, fg):
         if 'bg' in component.keys() and getattr(component, "static_color", True):
