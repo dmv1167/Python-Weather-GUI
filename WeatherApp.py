@@ -1,6 +1,6 @@
 """
 Author: Dominic Vinciulla
-1026x800 weather information application built on tkinter
+1024x600 weather information application built on tkinter
 """
 
 import tkinter as tk

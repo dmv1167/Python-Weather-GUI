@@ -4,9 +4,9 @@ from json import loads
 
 def getPage(url: str):
     """
-    Parses api call into json dictionaries
+    Parses api call into JSON dictionaries
     :param url: url to be accessed
-    :return: resulting dictionary from json parsing
+    :return: resulting dictionary from JSON parsing
     """
     try:
         weatherPage = urlopen(url)
@@ -77,10 +77,7 @@ class WeatherDataObj:
 
     def setUnit(self, unit: str):
         self.headers["UNITS"] = unit
-        if unit == "imperial":
-            self.speedUnit = "mph"
-        else:
-            self.speedUnit = "kmh"
+        self.speedUnit = "mph" if unit == "imperial" else "kmh"
 
     def getUnit(self) -> str:
         return self.speedUnit
