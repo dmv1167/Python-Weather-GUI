@@ -160,7 +160,7 @@ class WeatherApp:
         bottom.pack(fill="x")
 
         self.widgets["-DATE-"] = tk.Label(bottom, text="Date", font=("Courier", 25), bg=bg, fg="white")
-        self.widgets["-DATE-"].pack(side="left")
+        self.widgets["-DATE-"].pack(side="left", padx=10)
 
         self.widgets["-UNITS-"] = tk.Checkbutton(bottom, text="C°", font=("Courier", 20), variable=self.units, highlightcolor=bg, selectcolor=bg, bg=bg, fg="white", command=self.on_unit_changed)
         self.widgets["-UNITS-"].pack(side="right", padx=15, pady=5)
@@ -280,7 +280,7 @@ class WeatherApp:
     def schedule_update(self):
         weatherObj.refresh()
         self.update_window()
-        self.root.after(120000, self.schedule_update)
+        self.root.after(180000, self.schedule_update)
 
     def dark_mode(self):
         self.set_theme(self.root, NIGHTBG, DAYBG)
