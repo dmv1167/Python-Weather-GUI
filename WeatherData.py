@@ -1,6 +1,13 @@
 from urllib.request import urlopen
-from datetime import datetime
 from json import loads
+import logging
+
+
+logging.basicConfig(filename='log.txt',
+                    filemode='a',
+                    format='[%(asctime)s] %(levelname)s: %(message)s',
+                    level=logging.INFO
+)
 
 def getPage(url: str):
     """
@@ -11,9 +18,7 @@ def getPage(url: str):
     try:
         weatherPage = urlopen(url)
     except Exception as e:
-        with open('log.txt', 'a+') as file:
-            now = datetime.now().strftime('[%m/%d/%Y %I:%M %p]')
-            file.write(f'\n{now}\n{str(e)}\n')
+        logging.error(f"Error: {e}")
         return None
     else:
         return loads(weatherPage.read())
