@@ -55,6 +55,7 @@ class WeatherApp:
         self.root.overrideredirect(True)
         self.day = True
         self.date = datetime.today()
+        self.iconUrl = ""
 
         # StringVars for automatic UI binding
         self.city_var = ctk.StringVar(value="City")
