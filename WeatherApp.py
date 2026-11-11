@@ -65,7 +65,7 @@ class WeatherApp:
         # Fonts
         self.fonts = {
             "title": ctk.CTkFont("Courier", size=50, weight="bold"),
-            "temp": ctk.CTkFont("Courier", size=155, weight="bold"),
+            "temp": ctk.CTkFont("Courier", size=200, weight="bold"),
             "mid_val": ctk.CTkFont("Courier", size=40, weight="bold"),
             "mid_lbl": ctk.CTkFont("Courier", size=20),
             "footer": ctk.CTkFont("Courier", size=20),
