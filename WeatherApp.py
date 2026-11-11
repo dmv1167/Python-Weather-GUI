@@ -53,32 +53,32 @@ class WeatherApp:
         self.root = root
         self.root.geometry("1024x600")
         self.root.overrideredirect(True)
-        self.widgets = {}
         self.day = True
-        self.units = ctk.BooleanVar(value=False)
-        self.iconUrl = ''
-        self.icon = self.generate_image(weatherObj.icon())
         self.date = datetime.today()
 
-        # Reusable font definitions
-        self.font_city = ctk.CTkFont(family="Courier", size=50, weight="bold")
-        self.font_desc = ctk.CTkFont(family="Courier", size=20, weight="bold")
-        self.font_temp = ctk.CTkFont(family="Courier", size=155, weight="bold")
-        self.font_feels = ctk.CTkFont(family="Courier", size=30)
-        self.font_hl_val = ctk.CTkFont(family="Courier", size=40, weight="bold")
-        self.font_hl_lbl = ctk.CTkFont(family="Courier", size=20)
-        self.font_wh_lbl = ctk.CTkFont(family="Courier", size=40)
-        self.font_wh_val = ctk.CTkFont(family="Courier", size=40, weight="bold")
-        self.font_date = ctk.CTkFont(family="Courier", size=25)
-        self.font_units = ctk.CTkFont(family="Courier", size=20)
-        self.font_quit = ctk.CTkFont(family="Courier", size=15)
+        # StringVars for automatic UI binding
+        self.city_var = ctk.StringVar(value="City")
+        self.temp_var = ctk.StringVar(value="00°")
+        self.feels_var = ctk.StringVar(value="Feels Like: --")
+        self.desc_var = ctk.StringVar(value="")
+        self.high_var = ctk.StringVar(value="00")
+        self.low_var = ctk.StringVar(value="00")
+        self.wind_var = ctk.StringVar(value="00")
+        self.hum_var = ctk.StringVar(value="00%")
+        self.date_var = ctk.StringVar(value="Date")
+        self.units = ctk.BooleanVar(value=False)
+
+        # Structured fonts
+        self.fonts = {
+            "title": ctk.CTkFont("Courier", size=50, weight="bold"),
+            "temp": ctk.CTkFont("Courier", size=155, weight="bold"),
+            "mid_val": ctk.CTkFont("Courier", size=40, weight="bold"),
+            "mid_lbl": ctk.CTkFont("Courier", size=20),
+            "footer": ctk.CTkFont("Courier", size=20),
+        }
 
         self.build_layout()
         self.light_mode()
-
-        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
-
-        # Start periodic updates
         self.schedule_update()
         self.update_time()
 
@@ -91,119 +91,122 @@ class WeatherApp:
         self.root.configure(fg_color=BG_COLOR)
 
         main = ctk.CTkFrame(self.root, fg_color=BG_COLOR)
-        main.pack(fill="both", expand=True)
+        main.pack(fill="both", expand=True, padx=15, pady=15)
 
-        # Top row: City + Icon + Day selector
+        # Top Bar
         top = ctk.CTkFrame(main, fg_color=BG_COLOR)
         top.pack(fill='x')
 
-        self.widgets["-CITY-"] = ctk.CTkLabel(
-            top, text="City", font=self.font_city, fg_color=BG_COLOR, text_color=TEXT_COLOR
+        ctk.CTkLabel(top, textvariable=self.city_var, font=self.fonts["title"], fg_color=BG_COLOR, text_color=TEXT_COLOR).pack(side="left")
+
+        self.day_selector = ctk.CTkSegmentedButton(
+            top, values=["Today"], command=lambda choice: self.update_window()
         )
-        self.widgets["-CITY-"].pack(side="left", padx=10)
+        self.day_selector.pack(side="right")
 
-        date_values = [datetime.now().strftime('%A, %m/%d')]
-
-        self.widgets["-SELECTOR-"] = ctk.CTkComboBox(
-            top,
-            values=date_values,
-            state="readonly",
-            command=lambda choice: self.update_window()
-        )
-        self.widgets["-SELECTOR-"].pack(side="right", padx=15)
-        self.widgets["-SELECTOR-"].set(date_values[0])
-
-        self.update_days(True)
-
+        # Weather Summary
         desc_box = ctk.CTkFrame(main, fg_color=BG_COLOR)
-        desc_box.pack(fill='x')
+        desc_box.pack(fill='x', pady=5)
 
-        self.widgets["-IMAGE-"] = ctk.CTkLabel(desc_box, fg_color=BG_COLOR, text="", image=self.icon)
-        self.widgets["-IMAGE-"].pack(side="left", padx=10)
+        self.img_label = ctk.CTkLabel(desc_box, fg_color=BG_COLOR, text="")
+        self.img_label.pack(side="left", padx=5)
 
-        self.widgets["-DESC-"] = ctk.CTkLabel(
-            desc_box, text="Desc", font=self.font_desc, fg_color=BG_COLOR, text_color=TEXT_COLOR
-        )
-        self.widgets["-DESC-"].pack(side="left")
+        ctk.CTkLabel(desc_box, textvariable=self.desc_var, font=self.fonts["mid_lbl"], fg_color=BG_COLOR, text_color=TEXT_COLOR).pack(side="left")
 
-        # Middle row: Temp, High/Low, Wind/Humidity
+        # Mid Content Frame
         mid = ctk.CTkFrame(main, fg_color=BG_COLOR)
-        mid.pack(fill="x", expand=True, pady=10)
+        mid.pack(fill="both", expand=True)
 
-        # TEMP COLUMN
+        # Temp Block
         temp_col = ctk.CTkFrame(mid, fg_color=BG_COLOR)
         temp_col.pack(side="left", expand=True)
 
-        self.widgets["-TEMP-"] = ctk.CTkLabel(
-            temp_col, text="00°", font=self.font_temp, fg_color=BG_COLOR, text_color=TEXT_COLOR
-        )
-        self.widgets["-TEMP-"].pack()
+        self.temp_label = ctk.CTkLabel(temp_col, textvariable=self.temp_var, font=self.fonts["temp"], fg_color=BG_COLOR, text_color=TEXT_COLOR)
+        self.temp_label.pack()
+        ctk.CTkLabel(temp_col, textvariable=self.feels_var, font=self.fonts["footer"], fg_color=BG_COLOR, text_color=TEXT_COLOR).pack()
 
-        self.widgets["-FEELS-"] = ctk.CTkLabel(
-            temp_col, text="Feels Like:", font=self.font_feels, fg_color=BG_COLOR, text_color=TEXT_COLOR
-        )
-        self.widgets["-FEELS-"].pack()
-
-        # HIGH/LOW COLUMN
+        # High/Low Block
         hl_col = ctk.CTkFrame(mid, fg_color=BG_COLOR)
         hl_col.pack(side="left", expand=True)
 
-        self.widgets["-HIGH-"] = ctk.CTkLabel(
-            hl_col, text="00", font=self.font_hl_val, fg_color=BG_COLOR, text_color=TEXT_COLOR
-        )
-        self.widgets["-HIGH-"].pack()
-        ctk.CTkLabel(hl_col, text="High", font=self.font_hl_lbl, fg_color=BG_COLOR, text_color=TEXT_COLOR).pack()
+        ctk.CTkLabel(hl_col, textvariable=self.high_var, font=self.fonts["mid_val"], fg_color=BG_COLOR, text_color=TEXT_COLOR).pack()
+        ctk.CTkLabel(hl_col, text="High", font=self.fonts["mid_lbl"], fg_color=BG_COLOR, text_color=TEXT_COLOR).pack()
+        ctk.CTkLabel(hl_col, textvariable=self.low_var, font=self.fonts["mid_val"], fg_color=BG_COLOR, text_color=TEXT_COLOR).pack()
+        ctk.CTkLabel(hl_col, text="Low", font=self.fonts["mid_lbl"], fg_color=BG_COLOR, text_color=TEXT_COLOR).pack()
 
-        self.widgets["-LOW-"] = ctk.CTkLabel(
-            hl_col, text="00", font=self.font_hl_val, fg_color=BG_COLOR, text_color=TEXT_COLOR
-        )
-        self.widgets["-LOW-"].pack()
-        ctk.CTkLabel(hl_col, text="Low", font=self.font_hl_lbl, fg_color=BG_COLOR, text_color=TEXT_COLOR).pack()
+        # Separator Line
+        ctk.CTkFrame(mid, fg_color=TEXT_COLOR, width=2).pack(side="left", fill="y", padx=15)
 
-        # VERTICAL SEPARATOR
-        sep = ctk.CTkFrame(mid, fg_color=TEXT_COLOR, width=2)
-        sep.pack(side="left", fill="y", padx=10)
-
-        # WIND/HUMIDITY COLUMN
+        # Wind/Humidity Block
         wh_col = ctk.CTkFrame(mid, fg_color=BG_COLOR)
         wh_col.pack(side="left", expand=True)
 
-        ctk.CTkLabel(wh_col, text="Wind", font=self.font_wh_lbl, fg_color=BG_COLOR, text_color=TEXT_COLOR).pack()
-        self.widgets["-WIND-"] = ctk.CTkLabel(
-            wh_col, text="00", font=self.font_wh_val, fg_color=BG_COLOR, text_color=TEXT_COLOR
-        )
-        self.widgets["-WIND-"].pack()
+        ctk.CTkLabel(wh_col, text="Wind", font=self.fonts["mid_lbl"], fg_color=BG_COLOR, text_color=TEXT_COLOR).pack()
+        ctk.CTkLabel(wh_col, textvariable=self.wind_var, font=self.fonts["mid_val"], fg_color=BG_COLOR, text_color=TEXT_COLOR).pack()
+        ctk.CTkLabel(wh_col, text="Humidity", font=self.fonts["mid_lbl"], fg_color=BG_COLOR, text_color=TEXT_COLOR).pack()
+        ctk.CTkLabel(wh_col, textvariable=self.hum_var, font=self.fonts["mid_val"], fg_color=BG_COLOR, text_color=TEXT_COLOR).pack()
 
-        ctk.CTkLabel(wh_col, text="Humidity", font=self.font_wh_lbl, fg_color=BG_COLOR, text_color=TEXT_COLOR).pack()
-        self.widgets["-HUM-"] = ctk.CTkLabel(
-            wh_col, text="00", font=self.font_wh_val, fg_color=BG_COLOR, text_color=TEXT_COLOR
-        )
-        self.widgets["-HUM-"].pack()
-
-        # Bottom row: Date + Units checkbox
+        # Bottom Bar
         bottom = ctk.CTkFrame(main, fg_color=BG_COLOR)
         bottom.pack(fill="x")
 
-        self.widgets["-DATE-"] = ctk.CTkLabel(
-            bottom, text="Date", font=self.font_date, fg_color=BG_COLOR, text_color=TEXT_COLOR
-        )
-        self.widgets["-DATE-"].pack(side="left", padx=10)
+        ctk.CTkLabel(bottom, textvariable=self.date_var, font=self.fonts["footer"], fg_color=BG_COLOR, text_color=TEXT_COLOR).pack(side="left")
 
-        self.widgets["-UNITS-"] = ctk.CTkCheckBox(
-            bottom,
-            text="C°",
-            font=self.font_units,
-            variable=self.units,
-            fg_color=BG_COLOR,
-            text_color=TEXT_COLOR,
-            command=self.on_unit_changed
-        )
-        self.widgets["-UNITS-"].pack(side="right", padx=15, pady=5)
+        # CTkSwitch replaces CTkCheckBox
+        ctk.CTkSwitch(
+            bottom, text="°C", font=self.fonts["footer"], variable=self.units,
+            fg_color=BG_COLOR, text_color=TEXT_COLOR, command=self.on_unit_changed
+        ).pack(side="right", padx=10)
 
-        self.widgets["-QUIT-"] = ctk.CTkButton(
-            bottom, text="Quit", font=self.font_quit, fg_color=BG_COLOR, text_color=TEXT_COLOR, command=self.on_close
-        )
-        self.widgets["-QUIT-"].pack(side="right")
+        ctk.CTkButton(
+            bottom, text="Quit", font=self.fonts["footer"], fg_color=BG_COLOR,
+            text_color=TEXT_COLOR, command=self.on_close, width=60
+        ).pack(side="right")
+
+    def update_window(self, event=None):
+        index = self.update_days(False)
+
+        currObj = weatherObj if index == 0 else weatherObj.forecast(index)
+
+        temp = int(currObj.currentTemp())
+        desc = currObj.description().title()
+
+        # Update StringVars
+        self.city_var.set(f"{weatherObj.getCity()},{weatherObj.getState()}")
+        self.temp_var.set(f"{temp}°")
+        self.high_var.set(f"{round(currObj.highTemp())}")
+        self.low_var.set(f"{round(currObj.lowTemp())}")
+        self.feels_var.set(f"Feels like: {round(currObj.feelsLike())}°")
+        self.wind_var.set(f"{round(currObj.windSpeed())} {currObj.getUnit()}")
+        self.hum_var.set(f"{currObj.humidity()}%")
+        self.desc_var.set(desc)
+
+        self.load_image_async(currObj.icon())
+
+        # Mode switching
+        sunset = weatherObj.sunset()
+        sunrise = weatherObj.sunrise()
+        current_time = time.time()
+        if sunset > current_time >= sunrise and not self.day:
+            self.day = True
+            self.light_mode()
+        elif (current_time < sunrise or current_time >= sunset) and self.day:
+            self.day = False
+            self.dark_mode()
+
+        # Dynamic temperature color coding
+        temperature = round(temp if not self.units.get() else (temp * 9 / 5) + 32)
+        color = TEXT_COLOR
+        if temperature >= 80:
+            color = "red"
+        elif temperature >= 70:
+            color = "orange"
+        elif temperature <= 45:
+            color = "#03b6fc"
+        elif temperature <= 30:
+            color = "#0013bf"
+
+        self.temp_label.configure(text_color=color)
 
     def generate_image(self, url):
         if self.iconUrl == url:
@@ -217,47 +220,6 @@ class WeatherApp:
         photo = ctk.CTkImage(light_image=image, dark_image=image, size=(50, 50))
         self.icon = photo
         return photo
-
-    def update_window(self, event=None):
-        index = self.update_days(False)
-
-        currObj = weatherObj if index == 0 else weatherObj.forecast(index)
-
-        temp = int(currObj.currentTemp())
-        desc = currObj.description().title()
-
-        self.widgets["-CITY-"].configure(text=f'{weatherObj.getCity()},{weatherObj.getState()}')
-        self.widgets["-TEMP-"].configure(text=f"{temp}°")
-        self.widgets["-HIGH-"].configure(text=f"{round(currObj.highTemp())}")
-        self.widgets["-LOW-"].configure(text=f"{round(currObj.lowTemp())}")
-        self.widgets["-FEELS-"].configure(text=f"Feels like: {round(currObj.feelsLike())}°")
-        self.widgets["-WIND-"].configure(text=f"{round(currObj.windSpeed())} {currObj.getUnit()}")
-        self.widgets["-HUM-"].configure(text=f"{currObj.humidity()}%")
-        self.widgets["-DESC-"].configure(text=desc)
-        self.load_image_async(currObj.icon())
-
-        sunset = weatherObj.sunset()
-        sunrise = weatherObj.sunrise()
-        current_time = time.time()
-        if sunset > current_time >= sunrise and not self.day:
-            self.day = True
-            self.light_mode()
-        elif (current_time < sunrise or current_time >= sunset) and self.day:
-            self.day = False
-            self.dark_mode()
-
-        temperature = round(temp if not self.units.get() else (temp * 9/5) + 32)
-        # Default back to dynamic tuple color unless temperature threshold is met
-        color = TEXT_COLOR
-        if temperature >= 80:
-            color = "red"
-        elif temperature >= 70:
-            color = "orange"
-        elif temperature <= 45:
-            color = "#03b6fc"
-        elif temperature <= 30:
-            color = "#0013bf"
-        self.widgets["-TEMP-"].configure(text_color=color)
 
     def load_image_async(self, url):
         if self.iconUrl == url:
@@ -282,7 +244,7 @@ class WeatherApp:
         if url != self.iconUrl:
             return
         self.icon = photo
-        self.widgets["-IMAGE-"].configure(image=self.icon)
+        self.img_label.configure(image=self.icon)
 
     def on_unit_changed(self):
         weatherObj.setUnit("metric" if self.units.get() else "imperial")
@@ -291,24 +253,23 @@ class WeatherApp:
 
     def update_time(self):
         now = datetime.now()
-        self.widgets["-DATE-"].configure(
-            text=f'{now.strftime("%A, %B")} {suffix(now.day)} | {now.strftime("%I:%M %p")}'
+        self.date_var.set(
+            f'{now.strftime("%A, %B")} {suffix(now.day)} | {now.strftime("%I:%M %p")}'
         )
         self.root.after(ms_until_next_minute(), self.update_time)
 
     def update_days(self, force: bool):
-        selector = self.widgets["-SELECTOR-"]
         if force or self.date != datetime.today():
             now = datetime.now()
             days = [now + timedelta(days=i) for i in range(DAYCOUNT)]
             dates = [d.strftime('%A, %m/%d') for d in days]
             dates[0] = "Today"
-            selector.configure(values=dates)
+            self.day_selector.configure(values=dates)
             self.date = datetime.today()
 
-        values = selector.cget("values")
-        index = values.index(selector.get()) if selector.get() in values else 0
-        return index
+        values = self.day_selector.cget("values")
+        selected = self.day_selector.get()
+        return values.index(selected) if selected in values else 0
 
     def schedule_update(self):
         weatherObj.refresh()
