@@ -4,6 +4,7 @@ Author: Dominic Vinciulla
 """
 
 import tkinter as tk
+import customtkinter as ctk
 import time
 import threading
 from io import BytesIO
@@ -86,86 +87,86 @@ class WeatherApp:
     def build_layout(self):
         bg = self.root["bg"]
 
-        main = tk.Frame(self.root, bg=bg)
+        main = ctk.CTkFrame(self.root, fg_color=bg)
         main.pack(fill="both", expand=True)
 
         # Top row: City + Icon + Day selector
-        top = tk.Frame(main, bg=bg)
+        top = ctk.CTkFrame(main, fg_color=bg)
         top.pack(fill='x')
 
-        self.widgets["-CITY-"] = tk.Label(top, text="City", font=("Courier", 50, "bold"), bg=bg, fg="white")
+        self.widgets["-CITY-"] = ctk.CTkLabel(top, text="City", font=("Courier", 50, "bold"), fg_color=bg, text_color="white")
         self.widgets["-CITY-"].pack(side="left", padx=10)
 
 
-        self.widgets["-SELECTOR-"] = ttk.Combobox(top, state="readonly")
+        self.widgets["-SELECTOR-"] = ctk.CTkComboBox(top, state="readonly")
         self.widgets["-SELECTOR-"].pack(side="right", padx=15)
         self.widgets["-SELECTOR-"]["values"] = [datetime.now().strftime('%A, %m/%d')]
         self.update_days(True)
         self.widgets["-SELECTOR-"].current(0)
 
-        desc_box = tk.Frame(main, bg=bg)
+        desc_box = ctk.CTkFrame(main, fg_color=bg)
         desc_box.pack(fill='x', )
 
-        self.widgets["-IMAGE-"] = tk.Label(desc_box, bg=bg, image=self.icon)
+        self.widgets["-IMAGE-"] = ctk.CTkLabel(desc_box, fg_color=bg, image=self.icon)
         self.widgets["-IMAGE-"].pack(side="left", padx=10)
 
-        self.widgets["-DESC-"] = tk.Label(desc_box, text="Desc", font=("Courier", 20, 'bold'), bg=bg, fg="white")
+        self.widgets["-DESC-"] = ctk.CTkLabel(desc_box, text="Desc", font=("Courier", 20, 'bold'), fg_color=bg, text_color="white")
         self.widgets["-DESC-"].pack(side="left")
 
         # Middle row: Temp, High/Low, Wind/Humidity
-        mid = tk.Frame(main, bg=bg)
+        mid = ctk.CTkFrame(main, fg_color=bg)
         mid.pack(fill="x", expand=True, pady=10)
 
         # TEMP COLUMN
-        temp_col = tk.Frame(mid, bg=bg)
+        temp_col = ctk.CTkFrame(mid, fg_color=bg)
         temp_col.pack(side="left", expand=True)
 
-        self.widgets["-TEMP-"] = tk.Label(temp_col, text="00°", font=("Courier", 155, "bold"), bg=bg, fg="white")
+        self.widgets["-TEMP-"] = ctk.CTkLabel(temp_col, text="00°", font=("Courier", 155, "bold"), fg_color=bg, text_color="white")
         self.widgets["-TEMP-"].pack()
 
-        self.widgets["-FEELS-"] = tk.Label(temp_col, text="Feels Like:", font=("Courier", 30), bg=bg, fg="white")
+        self.widgets["-FEELS-"] = ctk.CTkLabel(temp_col, text="Feels Like:", font=("Courier", 30), fg_color=bg, text_color="white")
         self.widgets["-FEELS-"].pack()
 
         # HIGH/LOW COLUMN
-        hl_col = tk.Frame(mid, bg=bg)
+        hl_col = ctk.CTkFrame(mid, fg_color=bg)
         hl_col.pack(side="left", expand=True)
 
-        self.widgets["-HIGH-"] = tk.Label(hl_col, text="00", font=("Courier", 40, "bold"), bg=bg, fg="white")
+        self.widgets["-HIGH-"] = ctk.CTkLabel(hl_col, text="00", font=("Courier", 40, "bold"), fg_color=bg, text_color="white")
         self.widgets["-HIGH-"].pack()
-        tk.Label(hl_col, text="High", font=("Courier", 20), bg=bg, fg="white").pack()
+        ctk.CTkLabel(hl_col, text="High", font=("Courier", 20), fg_color=bg, text_color="white").pack()
 
-        self.widgets["-LOW-"] = tk.Label(hl_col, text="00", font=("Courier", 40, "bold"), bg=bg, fg="white")
+        self.widgets["-LOW-"] = ctk.CTkLabel(hl_col, text="00", font=("Courier", 40, "bold"), fg_color=bg, text_color="white")
         self.widgets["-LOW-"].pack()
-        tk.Label(hl_col, text="Low", font=("Courier", 20), bg=bg, fg="white").pack()
+        ctk.CTkLabel(hl_col, text="Low", font=("Courier", 20), fg_color=bg, text_color="white").pack()
 
         # VERTICAL SEPARATOR
-        sep = tk.Frame(mid, bg="white", width=2)
+        sep = ctk.CTkFrame(mid, fg_color="white", width=2)
         sep.static_color = False
         sep.pack(side="left", fill="y", padx=10)
 
         # WIND/HUMIDITY COLUMN
-        wh_col = tk.Frame(mid, bg=bg)
+        wh_col = ctk.CTkFrame(mid, fg_color=bg)
         wh_col.pack(side="left", expand=True)
 
-        tk.Label(wh_col, text="Wind", font=("Courier", 40), bg=bg, fg="white").pack()
-        self.widgets["-WIND-"] = tk.Label(wh_col, text="00", font=("Courier", 40, "bold"), bg=bg, fg="white")
+        ctk.CTkLabel(wh_col, text="Wind", font=("Courier", 40), fg_color=bg, text_color="white").pack()
+        self.widgets["-WIND-"] = ctk.CTkLabel(wh_col, text="00", font=("Courier", 40, "bold"), fg_color=bg, text_color="white")
         self.widgets["-WIND-"].pack()
 
-        tk.Label(wh_col, text="Humidity", font=("Courier", 40), bg=bg, fg="white").pack()
-        self.widgets["-HUM-"] = tk.Label(wh_col, text="00", font=("Courier", 40, "bold"), bg=bg, fg="white")
+        ctk.CTkLabel(wh_col, text="Humidity", font=("Courier", 40), fg_color=bg, text_color="white").pack()
+        self.widgets["-HUM-"] = ctk.CTkLabel(wh_col, text="00", font=("Courier", 40, "bold"), fg_color=bg, text_color="white")
         self.widgets["-HUM-"].pack()
 
         # Bottom row: Date + Units checkbox
-        bottom = tk.Frame(main, bg=bg)
+        bottom = ctk.CTkFrame(main, fg_color=bg)
         bottom.pack(fill="x")
 
-        self.widgets["-DATE-"] = tk.Label(bottom, text="Date", font=("Courier", 25), bg=bg, fg="white")
+        self.widgets["-DATE-"] = ctk.CTkLabel(bottom, text="Date", font=("Courier", 25), fg_color=bg, text_color="white")
         self.widgets["-DATE-"].pack(side="left", padx=10)
 
-        self.widgets["-UNITS-"] = tk.Checkbutton(bottom, text="C°", font=("Courier", 20), variable=self.units, highlightcolor=bg, selectcolor=bg, bg=bg, fg="white", command=self.on_unit_changed)
+        self.widgets["-UNITS-"] = ctk.CTkCheckBox(bottom, text="C°", font=("Courier", 20), variable=self.units, highlightcolor=bg, selectcolor=bg, fg_color=bg, text_color="white", command=self.on_unit_changed)
         self.widgets["-UNITS-"].pack(side="right", padx=15, pady=5)
 
-        self.widgets["-QUIT-"] = tk.Button(bottom, text="Quit", font=("Courier", 15), bg=bg, fg="white", command=self.on_close)
+        self.widgets["-QUIT-"] = ctk.CTkButton(bottom, text="Quit", font=("Courier", 15), fg_color=bg, text_color="white", command=self.on_close)
         self.widgets["-QUIT-"].pack(side="right")
 
     def generate_image(self, url):
@@ -177,7 +178,7 @@ class WeatherApp:
             data = u.read()
 
         image = Image.open(BytesIO(data))
-        photo = ImageTk.PhotoImage(image)
+        photo = ctk.CTkImage(image)
         self.icon = photo
         return photo
 
@@ -217,7 +218,7 @@ class WeatherApp:
         elif temperature >= 70: color = "orange"
         elif temperature <= 45: color = "#03b6fc"
         elif temperature <= 30: color = "#0013bf"
-        self.widgets["-TEMP-"].config(fg=color)
+        self.widgets["-TEMP-"].config(text_color=color)
 
     def load_image_async(self, url):
         if self.iconUrl == url:
@@ -238,7 +239,7 @@ class WeatherApp:
                 data = u.read()
 
             image = Image.open(BytesIO(data))
-            photo = ImageTk.PhotoImage(image)
+            photo = ctk.CTkImage(image)
 
             self.root.after(0, self._update_image_label, photo, url)
 
@@ -290,14 +291,15 @@ class WeatherApp:
 
     def set_theme(self, component, bg, fg):
         if 'bg' in component.keys() and getattr(component, "static_color", True):
-            component.configure(bg=bg)
+            component.configure(fg_color=bg)
 
         if 'fg' in component.keys() and getattr(component, "static_color", True):
-            component.configure(fg=fg)
+            component.configure(text_color=fg)
 
         for w in component.winfo_children():
             self.set_theme(w, bg, fg)
 
-tkRoot = tk.Tk()
-app = WeatherApp(tkRoot)
-tkRoot.mainloop()
+# tkRoot = tk.Tk()
+ctkRoot = ctk.CTk()
+app = WeatherApp(ctkRoot)
+ctkRoot.mainloop()
