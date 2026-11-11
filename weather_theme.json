@@ -1,4 +1,12 @@
 {
+  "CTkFont": {
+    "family": "Courier",
+    "size": 13,
+    "weight": "normal",
+    "slant": "roman",
+    "overstrike": 0,
+    "underline": 0
+  },
   "CTk": {
     "fg_color": ["#a2c1fa", "#0d1026"]
   },
