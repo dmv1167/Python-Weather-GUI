@@ -19,6 +19,11 @@ DAYCOUNT = 7
 DAYBG = '#a2c1fa'
 DAYTEXT = '#0c1d3d'
 NIGHTBG = '#0d1026'
+
+# Dynamic Light/Dark color tuples (Light_Mode, Dark_Mode)
+BG_COLOR = (DAYBG, NIGHTBG)
+TEXT_COLOR = (DAYTEXT, DAYBG)
+
 city = ''
 state = ''
 
@@ -55,7 +60,7 @@ class WeatherApp:
         self.icon = self.generate_image(weatherObj.icon())
         self.date = datetime.today()
 
-        # Define reusable font objects to support high-DPI scaling
+        # Reusable font definitions
         self.font_city = ctk.CTkFont(family="Courier", size=50, weight="bold")
         self.font_desc = ctk.CTkFont(family="Courier", size=20, weight="bold")
         self.font_temp = ctk.CTkFont(family="Courier", size=155, weight="bold")
@@ -73,6 +78,7 @@ class WeatherApp:
 
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
+        # Start periodic updates
         self.schedule_update()
         self.update_time()
 
@@ -82,17 +88,17 @@ class WeatherApp:
         sys.exit(0)
 
     def build_layout(self):
-        bg = self.root.cget("fg_color")
+        self.root.configure(fg_color=BG_COLOR)
 
-        main = ctk.CTkFrame(self.root, fg_color=bg)
+        main = ctk.CTkFrame(self.root, fg_color=BG_COLOR)
         main.pack(fill="both", expand=True)
 
         # Top row: City + Icon + Day selector
-        top = ctk.CTkFrame(main, fg_color=bg)
+        top = ctk.CTkFrame(main, fg_color=BG_COLOR)
         top.pack(fill='x')
 
         self.widgets["-CITY-"] = ctk.CTkLabel(
-            top, text="City", font=self.font_city, fg_color=bg, text_color="white"
+            top, text="City", font=self.font_city, fg_color=BG_COLOR, text_color=TEXT_COLOR
         )
         self.widgets["-CITY-"].pack(side="left", padx=10)
 
@@ -109,78 +115,77 @@ class WeatherApp:
 
         self.update_days(True)
 
-        desc_box = ctk.CTkFrame(main, fg_color=bg)
+        desc_box = ctk.CTkFrame(main, fg_color=BG_COLOR)
         desc_box.pack(fill='x')
 
-        self.widgets["-IMAGE-"] = ctk.CTkLabel(desc_box, fg_color=bg, text="", image=self.icon)
+        self.widgets["-IMAGE-"] = ctk.CTkLabel(desc_box, fg_color=BG_COLOR, text="", image=self.icon)
         self.widgets["-IMAGE-"].pack(side="left", padx=10)
 
         self.widgets["-DESC-"] = ctk.CTkLabel(
-            desc_box, text="Desc", font=self.font_desc, fg_color=bg, text_color="white"
+            desc_box, text="Desc", font=self.font_desc, fg_color=BG_COLOR, text_color=TEXT_COLOR
         )
         self.widgets["-DESC-"].pack(side="left")
 
         # Middle row: Temp, High/Low, Wind/Humidity
-        mid = ctk.CTkFrame(main, fg_color=bg)
+        mid = ctk.CTkFrame(main, fg_color=BG_COLOR)
         mid.pack(fill="x", expand=True, pady=10)
 
         # TEMP COLUMN
-        temp_col = ctk.CTkFrame(mid, fg_color=bg)
+        temp_col = ctk.CTkFrame(mid, fg_color=BG_COLOR)
         temp_col.pack(side="left", expand=True)
 
         self.widgets["-TEMP-"] = ctk.CTkLabel(
-            temp_col, text="00°", font=self.font_temp, fg_color=bg, text_color="white"
+            temp_col, text="00°", font=self.font_temp, fg_color=BG_COLOR, text_color=TEXT_COLOR
         )
         self.widgets["-TEMP-"].pack()
 
         self.widgets["-FEELS-"] = ctk.CTkLabel(
-            temp_col, text="Feels Like:", font=self.font_feels, fg_color=bg, text_color="white"
+            temp_col, text="Feels Like:", font=self.font_feels, fg_color=BG_COLOR, text_color=TEXT_COLOR
         )
         self.widgets["-FEELS-"].pack()
 
         # HIGH/LOW COLUMN
-        hl_col = ctk.CTkFrame(mid, fg_color=bg)
+        hl_col = ctk.CTkFrame(mid, fg_color=BG_COLOR)
         hl_col.pack(side="left", expand=True)
 
         self.widgets["-HIGH-"] = ctk.CTkLabel(
-            hl_col, text="00", font=self.font_hl_val, fg_color=bg, text_color="white"
+            hl_col, text="00", font=self.font_hl_val, fg_color=BG_COLOR, text_color=TEXT_COLOR
         )
         self.widgets["-HIGH-"].pack()
-        ctk.CTkLabel(hl_col, text="High", font=self.font_hl_lbl, fg_color=bg, text_color="white").pack()
+        ctk.CTkLabel(hl_col, text="High", font=self.font_hl_lbl, fg_color=BG_COLOR, text_color=TEXT_COLOR).pack()
 
         self.widgets["-LOW-"] = ctk.CTkLabel(
-            hl_col, text="00", font=self.font_hl_val, fg_color=bg, text_color="white"
+            hl_col, text="00", font=self.font_hl_val, fg_color=BG_COLOR, text_color=TEXT_COLOR
         )
         self.widgets["-LOW-"].pack()
-        ctk.CTkLabel(hl_col, text="Low", font=self.font_hl_lbl, fg_color=bg, text_color="white").pack()
+        ctk.CTkLabel(hl_col, text="Low", font=self.font_hl_lbl, fg_color=BG_COLOR, text_color=TEXT_COLOR).pack()
 
         # VERTICAL SEPARATOR
-        sep = ctk.CTkFrame(mid, fg_color="white", width=2)
-        sep.static_color = False
+        sep = ctk.CTkFrame(mid, fg_color=TEXT_COLOR, width=2)
         sep.pack(side="left", fill="y", padx=10)
 
         # WIND/HUMIDITY COLUMN
-        wh_col = ctk.CTkFrame(mid, fg_color=bg)
+        wh_col = ctk.CTkFrame(mid, fg_color=BG_COLOR)
         wh_col.pack(side="left", expand=True)
 
-        ctk.CTkLabel(wh_col, text="Wind", font=self.font_wh_lbl, fg_color=bg, text_color="white").pack()
+        ctk.CTkLabel(wh_col, text="Wind", font=self.font_wh_lbl, fg_color=BG_COLOR, text_color=TEXT_COLOR).pack()
         self.widgets["-WIND-"] = ctk.CTkLabel(
-            wh_col, text="00", font=self.font_wh_val, fg_color=bg, text_color="white"
+            wh_col, text="00", font=self.font_wh_val, fg_color=BG_COLOR, text_color=TEXT_COLOR
         )
         self.widgets["-WIND-"].pack()
 
-        ctk.CTkLabel(wh_col, text="Humidity", font=self.font_wh_lbl, fg_color=bg, text_color="white").pack()
+        ctk.CTkLabel(wh_col, text="Humidity", font=self.font_wh_lbl, fg_color=BG_COLOR, text_color=TEXT_COLOR).pack()
         self.widgets["-HUM-"] = ctk.CTkLabel(
-            wh_col, text="00", font=self.font_wh_val, fg_color=bg, text_color="white"
+            wh_col, text="00", font=self.font_wh_val, fg_color=BG_COLOR, text_color=TEXT_COLOR
         )
         self.widgets["-HUM-"].pack()
 
         # Bottom row: Date + Units checkbox
-        bottom = ctk.CTkFrame(main, fg_color=bg)
+        bottom = ctk.CTkFrame(main, fg_color=BG_COLOR)
         bottom.pack(fill="x")
 
         self.widgets["-DATE-"] = ctk.CTkLabel(
-            bottom, text="Date", font=self.font_date, fg_color=bg, text_color="white"
+            bottom, text="Date", font=self.font_date, fg_color=BG_COLOR, text_color=TEXT_COLOR
         )
         self.widgets["-DATE-"].pack(side="left", padx=10)
 
@@ -189,14 +194,14 @@ class WeatherApp:
             text="C°",
             font=self.font_units,
             variable=self.units,
-            fg_color=bg,
-            text_color="white",
+            fg_color=BG_COLOR,
+            text_color=TEXT_COLOR,
             command=self.on_unit_changed
         )
         self.widgets["-UNITS-"].pack(side="right", padx=15, pady=5)
 
         self.widgets["-QUIT-"] = ctk.CTkButton(
-            bottom, text="Quit", font=self.font_quit, fg_color=bg, text_color="white", command=self.on_close
+            bottom, text="Quit", font=self.font_quit, fg_color=BG_COLOR, text_color=TEXT_COLOR, command=self.on_close
         )
         self.widgets["-QUIT-"].pack(side="right")
 
@@ -242,7 +247,8 @@ class WeatherApp:
             self.dark_mode()
 
         temperature = round(temp if not self.units.get() else (temp * 9/5) + 32)
-        color = "white"
+        # Default back to dynamic tuple color unless temperature threshold is met
+        color = TEXT_COLOR
         if temperature >= 80:
             color = "red"
         elif temperature >= 70:
@@ -310,22 +316,10 @@ class WeatherApp:
         self.root.after(180000, self.schedule_update)
 
     def dark_mode(self):
-        self.set_theme(self.root, NIGHTBG, DAYBG)
+        ctk.set_appearance_mode("Dark")
 
     def light_mode(self):
-        self.set_theme(self.root, DAYBG, DAYTEXT)
-
-    def set_theme(self, component, bg, fg):
-        if getattr(component, "static_color", True):
-            if isinstance(component, (ctk.CTkFrame, ctk.CTk)):
-                component.configure(fg_color=bg)
-            elif isinstance(component, ctk.CTkLabel):
-                component.configure(fg_color=bg, text_color=fg)
-            elif isinstance(component, (ctk.CTkCheckBox, ctk.CTkButton, ctk.CTkComboBox)):
-                component.configure(fg_color=bg, text_color=fg)
-
-        for w in component.winfo_children():
-            self.set_theme(w, bg, fg)
+        ctk.set_appearance_mode("Light")
 
 
 ctkRoot = ctk.CTk()
