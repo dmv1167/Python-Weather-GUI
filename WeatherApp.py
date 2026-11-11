@@ -8,10 +8,9 @@ import customtkinter as ctk
 import time
 import threading
 from io import BytesIO
-from tkinter import ttk
 from datetime import datetime, timedelta
 from urllib.request import urlopen
-from PIL import Image, ImageTk
+from PIL import Image
 from dotenv import dotenv_values
 from WeatherData import WeatherDataObj
 
@@ -97,12 +96,13 @@ class WeatherApp:
         self.widgets["-CITY-"] = ctk.CTkLabel(top, text="City", font=("Courier", 50, "bold"), fg_color=bg, text_color="white")
         self.widgets["-CITY-"].pack(side="left", padx=10)
 
+        date_values = [datetime.now().strftime('%A, %m/%d')]
 
-        self.widgets["-SELECTOR-"] = ctk.CTkComboBox(top, state="readonly")
+        self.widgets["-SELECTOR-"] = ctk.CTkComboBox(top, values=date_values, state="readonly")
         self.widgets["-SELECTOR-"].pack(side="right", padx=15)
-        self.widgets["-SELECTOR-"]["values"] = [datetime.now().strftime('%A, %m/%d')]
+        self.widgets["-SELECTOR-"].set(date_values[0])
+
         self.update_days(True)
-        self.widgets["-SELECTOR-"].current(0)
 
         desc_box = ctk.CTkFrame(main, fg_color=bg)
         desc_box.pack(fill='x', )
@@ -275,7 +275,8 @@ class WeatherApp:
             selector["values"] = dates
             self.date = datetime.today()
 
-        index = selector.current() if selector.get() else 0
+        values = selector.cget("values")
+        index = values.index(selector.get()) if selector.get() in values else 0
         return index
 
     def schedule_update(self):
